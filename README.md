@@ -6,7 +6,7 @@
 A CLI tool to monitor multiple Claude Code sessions in real-time from your terminal.
 
 <p align="center">
-  <img src="docs/demo.gif" alt="Claude Code Monitor Demo" width="600">
+  <img src="docs/demo.gif" alt="Claude Code Monitor Demo" width="1000">
 </p>
 
 ---
