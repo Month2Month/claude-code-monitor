@@ -1,4 +1,4 @@
-import { updateSession } from '../store/file-store.js';
+import { flushPendingWrites, updateSession } from '../store/file-store.js';
 import type { HookEvent, HookEventName } from '../types/index.js';
 
 // Allowed hook event names (whitelist)
@@ -72,4 +72,7 @@ export async function handleHookEvent(eventName: string, tty?: string): Promise<
   };
 
   updateSession(event);
+
+  // Ensure data is written before process exits (hooks are short-lived processes)
+  flushPendingWrites();
 }

@@ -151,7 +151,10 @@ function applyHooks(settings: Settings, hooksToAdd: string[], baseCommand: strin
     }
   }
 
-  writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2), 'utf-8');
+  writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2), {
+    encoding: 'utf-8',
+    mode: 0o600,
+  });
 }
 
 /**

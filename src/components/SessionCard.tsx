@@ -12,7 +12,8 @@ interface SessionCardProps {
   isSelected: boolean;
 }
 
-function abbreviateHomePath(path: string): string {
+function abbreviateHomePath(path: string | undefined): string {
+  if (!path) return '(unknown)';
   return path.replace(/^\/Users\/[^/]+/, '~');
 }
 
