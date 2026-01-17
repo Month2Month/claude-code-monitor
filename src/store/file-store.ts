@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { SESSION_TIMEOUT_MS } from '../constants.js';
+import { SESSION_TIMEOUT_MS, WRITE_DEBOUNCE_MS } from '../constants.js';
 import type { HookEvent, Session, SessionStatus, StoreData } from '../types/index.js';
 import { isTtyAlive } from '../utils/tty-cache.js';
 
@@ -10,6 +10,10 @@ export { isTtyAlive } from '../utils/tty-cache.js';
 
 const STORE_DIR = join(homedir(), '.claude-monitor');
 const STORE_FILE = join(STORE_DIR, 'sessions.json');
+
+// In-memory cache for batched writes
+let cachedStore: StoreData | null = null;
+let writeTimer: ReturnType<typeof setTimeout> | null = null;
 
 function ensureStoreDir(): void {
   if (!existsSync(STORE_DIR)) {
@@ -25,6 +29,11 @@ function getEmptyStoreData(): StoreData {
 }
 
 export function readStore(): StoreData {
+  // Return cached data if available (for batched writes consistency)
+  if (cachedStore) {
+    return cachedStore;
+  }
+
   ensureStoreDir();
   if (!existsSync(STORE_FILE)) {
     return getEmptyStoreData();
@@ -37,10 +46,49 @@ export function readStore(): StoreData {
   }
 }
 
+function flushWrite(): void {
+  if (cachedStore) {
+    try {
+      ensureStoreDir();
+      cachedStore.updated_at = new Date().toISOString();
+      writeFileSync(STORE_FILE, JSON.stringify(cachedStore), { encoding: 'utf-8', mode: 0o600 });
+    } catch {
+      // Silently ignore write errors to avoid crashing the hook process
+      // Data loss is acceptable as session data is ephemeral
+    } finally {
+      cachedStore = null;
+      writeTimer = null;
+    }
+  } else {
+    writeTimer = null;
+  }
+}
+
 export function writeStore(data: StoreData): void {
-  ensureStoreDir();
-  data.updated_at = new Date().toISOString();
-  writeFileSync(STORE_FILE, JSON.stringify(data), { encoding: 'utf-8', mode: 0o600 });
+  cachedStore = data;
+
+  // Cancel previous timer and schedule new write
+  if (writeTimer) {
+    clearTimeout(writeTimer);
+  }
+  writeTimer = setTimeout(flushWrite, WRITE_DEBOUNCE_MS);
+}
+
+/** Immediately flush any pending writes (useful for testing and cleanup) */
+export function flushPendingWrites(): void {
+  if (writeTimer) {
+    clearTimeout(writeTimer);
+    flushWrite();
+  }
+}
+
+/** Reset the in-memory cache (useful for testing) */
+export function resetStoreCache(): void {
+  if (writeTimer) {
+    clearTimeout(writeTimer);
+    writeTimer = null;
+  }
+  cachedStore = null;
 }
 
 /** @internal */

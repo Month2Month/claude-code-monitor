@@ -1,8 +1,26 @@
 import { statSync } from 'node:fs';
-import { TTY_CACHE_TTL_MS } from '../constants.js';
+import { MAX_TTY_CACHE_SIZE, TTY_CACHE_TTL_MS } from '../constants.js';
 
 // TTY check cache to avoid repeated statSync calls
 const ttyCache = new Map<string, { alive: boolean; checkedAt: number }>();
+
+/**
+ * Evict oldest entries when cache exceeds max size
+ * Uses FIFO eviction based on checkedAt timestamp
+ */
+function evictOldestIfNeeded(): void {
+  if (ttyCache.size <= MAX_TTY_CACHE_SIZE) {
+    return;
+  }
+
+  // Find and remove oldest entries until we're under the limit
+  const entriesToRemove = ttyCache.size - MAX_TTY_CACHE_SIZE;
+  const sortedEntries = [...ttyCache.entries()].sort((a, b) => a[1].checkedAt - b[1].checkedAt);
+
+  for (let i = 0; i < entriesToRemove; i++) {
+    ttyCache.delete(sortedEntries[i][0]);
+  }
+}
 
 /**
  * Check if a TTY device is still alive (exists in filesystem)
@@ -21,14 +39,16 @@ export function isTtyAlive(tty: string | undefined): boolean {
   }
 
   // Check TTY and cache result
+  let alive: boolean;
   try {
     statSync(tty);
-    ttyCache.set(tty, { alive: true, checkedAt: now });
-    return true;
+    alive = true;
   } catch {
-    ttyCache.set(tty, { alive: false, checkedAt: now });
-    return false;
+    alive = false;
   }
+  ttyCache.set(tty, { alive, checkedAt: now });
+  evictOldestIfNeeded();
+  return alive;
 }
 
 /**

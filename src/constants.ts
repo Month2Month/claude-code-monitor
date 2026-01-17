@@ -11,6 +11,18 @@ export const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
 /** TTY cache TTL in milliseconds (30 seconds) */
 export const TTY_CACHE_TTL_MS = 30_000;
 
+/** Maximum number of entries in TTY cache */
+export const MAX_TTY_CACHE_SIZE = 100;
+
+/** Debounce delay for useSessions updates in milliseconds */
+export const SESSION_UPDATE_DEBOUNCE_MS = 150;
+
+/** Debounce delay for JSON file writes in milliseconds */
+export const WRITE_DEBOUNCE_MS = 100;
+
+/** Periodic refresh interval for timeout detection in milliseconds (60 seconds) */
+export const SESSION_REFRESH_INTERVAL_MS = 60_000;
+
 /** Hook event types supported by Claude Code */
 export const HOOK_EVENTS = [
   'UserPromptSubmit',

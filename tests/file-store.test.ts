@@ -30,13 +30,22 @@ vi.mock('../src/utils/tty-cache.js', async (importOriginal) => {
 });
 
 describe('file-store', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Reset in-memory cache before each test
+    const { resetStoreCache } = await import('../src/store/file-store.js');
+    resetStoreCache();
+
     if (existsSync(TEST_STORE_DIR)) {
       rmSync(TEST_STORE_DIR, { recursive: true, force: true });
     }
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    // Flush and reset cache after each test
+    const { flushPendingWrites, resetStoreCache } = await import('../src/store/file-store.js');
+    flushPendingWrites();
+    resetStoreCache();
+
     vi.restoreAllMocks();
     if (existsSync(TEST_STORE_DIR)) {
       rmSync(TEST_STORE_DIR, { recursive: true, force: true });

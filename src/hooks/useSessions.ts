@@ -1,9 +1,8 @@
 import chokidar from 'chokidar';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { SESSION_REFRESH_INTERVAL_MS, SESSION_UPDATE_DEBOUNCE_MS } from '../constants.js';
 import { getSessions, getStorePath } from '../store/file-store.js';
 import type { Session } from '../types/index.js';
-
-const REFRESH_INTERVAL_MS = 60_000; // タイムアウト検出のための定期リフレッシュ（chokidarが主で、これはバックアップ）
 
 export function useSessions(): {
   sessions: Session[];
@@ -13,41 +12,55 @@ export function useSessions(): {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const loadSessions = useCallback(() => {
+    try {
+      const data = getSessions();
+      setSessions(data);
+      setError(null);
+    } catch (e) {
+      setError(e instanceof Error ? e : new Error('Failed to load sessions'));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const debouncedLoadSessions = useCallback(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      loadSessions();
+      debounceTimerRef.current = null;
+    }, SESSION_UPDATE_DEBOUNCE_MS);
+  }, [loadSessions]);
 
   useEffect(() => {
-    const loadSessions = () => {
-      try {
-        const data = getSessions();
-        setSessions(data);
-        setError(null);
-      } catch (e) {
-        setError(e instanceof Error ? e : new Error('Failed to load sessions'));
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    // Initial load
+    // Initial load (immediate, no debounce)
     loadSessions();
 
-    // Watch file changes
+    // Watch file changes (debounced)
     const storePath = getStorePath();
     const watcher = chokidar.watch(storePath, {
       persistent: true,
       ignoreInitial: true,
     });
 
-    watcher.on('change', loadSessions);
-    watcher.on('add', loadSessions);
+    watcher.on('change', debouncedLoadSessions);
+    watcher.on('add', debouncedLoadSessions);
 
-    // Periodic refresh (for timeout detection)
-    const interval = setInterval(loadSessions, REFRESH_INTERVAL_MS);
+    // Periodic refresh for timeout detection (chokidar is primary, this is backup)
+    const interval = setInterval(loadSessions, SESSION_REFRESH_INTERVAL_MS);
 
     return () => {
       watcher.close();
       clearInterval(interval);
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
     };
-  }, []);
+  }, [loadSessions, debouncedLoadSessions]);
 
   return { sessions, loading, error };
 }
