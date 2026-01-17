@@ -1,0 +1,36 @@
+# Source files (compiled dist is included)
+src/
+tsconfig.json
+
+# Development files
+.github/
+.vscode/
+.idea/
+*.log
+
+# Test files
+tests/
+__tests__/
+*.test.ts
+*.spec.ts
+coverage/
+vitest.config.ts
+
+# Config files
+.eslintrc*
+.prettierrc*
+.editorconfig
+biome.json
+
+# Documentation source (README.md is included via package.json files)
+docs/
+
+# Environment files
+.env*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Claude Code files
+CLAUDE.md

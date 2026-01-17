@@ -1,0 +1,77 @@
+{
+  "name": "claude-code-monitor",
+  "version": "1.0.0",
+  "description": "CLI for monitoring multiple Claude Code sessions in real-time",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "ccm": "dist/bin/ccm.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "dev": "tsx watch src/bin/ccm.tsx",
+    "build": "tsc",
+    "start": "node dist/bin/ccm.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "anthropic",
+    "monitor",
+    "cli",
+    "tui",
+    "terminal",
+    "session"
+  ],
+  "author": "onikan27",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/onikan27/claude-code-monitor.git"
+  },
+  "bugs": {
+    "url": "https://github.com/onikan27/claude-code-monitor/issues"
+  },
+  "homepage": "https://github.com/onikan27/claude-code-monitor#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "os": [
+    "darwin"
+  ],
+  "dependencies": {
+    "chokidar": "^4.0.3",
+    "commander": "^13.1.0",
+    "ink": "^5.2.0",
+    "react": "^18.3.1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.11",
+    "@types/node": "^22.15.30",
+    "@types/react": "^18.3.12",
+    "@vitest/coverage-v8": "^4.0.17",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3",
+    "vitest": "^4.0.17"
+  }
+}
