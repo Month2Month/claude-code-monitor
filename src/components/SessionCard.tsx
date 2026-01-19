@@ -36,7 +36,7 @@ export const SessionCard = memo(function SessionCard({
       <Box width={10}>
         {isRunning ? (
           <>
-            <Spinner color="green" />
+            <Spinner color="gray" />
             <Text color={color}> {label}</Text>
           </>
         ) : (

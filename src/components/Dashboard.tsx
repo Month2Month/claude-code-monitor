@@ -81,35 +81,38 @@ export function Dashboard(): React.ReactElement {
 
   return (
     <Box flexDirection="column">
-      {/* Header */}
-      <Box borderStyle="round" borderColor="cyan" paddingX={1}>
-        <Text bold color="cyan">
-          Claude Code Monitor
-        </Text>
-        <Text dimColor> │ </Text>
-        <Text color="green">● {running}</Text>
-        <Text dimColor> </Text>
-        <Text color="yellow">◐ {waitingInput}</Text>
-        <Text dimColor> </Text>
-        <Text color="cyan">✓ {stopped}</Text>
-      </Box>
+      {/* Main Panel: Header + Sessions */}
+      <Box flexDirection="column" borderStyle="round" borderColor="cyan" paddingX={1}>
+        {/* Header */}
+        <Box>
+          <Text bold color="cyan">
+            Claude Code Monitor
+          </Text>
+          <Text dimColor> </Text>
+          <Text color="gray">● {running}</Text>
+          <Text dimColor> </Text>
+          <Text color="yellow">◐ {waitingInput}</Text>
+          <Text dimColor> </Text>
+          <Text color="green">✓ {stopped}</Text>
+        </Box>
 
-      {/* Sessions */}
-      <Box flexDirection="column" borderStyle="round" borderColor="gray" marginTop={1} paddingX={1}>
-        {sessions.length === 0 ? (
-          <Box paddingY={1}>
-            <Text dimColor>No active sessions</Text>
-          </Box>
-        ) : (
-          sessions.map((session, index) => (
-            <SessionCard
-              key={`${session.session_id}:${session.tty || ''}`}
-              session={session}
-              index={index}
-              isSelected={index === selectedIndex}
-            />
-          ))
-        )}
+        {/* Sessions */}
+        <Box flexDirection="column" marginTop={1}>
+          {sessions.length === 0 ? (
+            <Box>
+              <Text dimColor>No active sessions</Text>
+            </Box>
+          ) : (
+            sessions.map((session, index) => (
+              <SessionCard
+                key={`${session.session_id}:${session.tty || ''}`}
+                session={session}
+                index={index}
+                isSelected={index === selectedIndex}
+              />
+            ))
+          )}
+        </Box>
       </Box>
 
       {/* Keyboard Shortcuts */}
@@ -123,7 +126,7 @@ export function Dashboard(): React.ReactElement {
 
       {/* Web UI */}
       {!serverLoading && qrCode && (
-        <Box borderStyle="round" borderColor="gray" marginTop={1} paddingX={1}>
+        <Box marginTop={1} paddingX={1}>
           <Box flexShrink={0}>
             <Text>{qrCode}</Text>
           </Box>
