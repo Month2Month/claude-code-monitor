@@ -5,6 +5,7 @@ import { Command } from 'commander';
 import { render } from 'ink';
 import { Dashboard } from '../components/Dashboard.js';
 import { handleHookEvent } from '../hook/handler.js';
+import { startServer } from '../server/index.js';
 import { isHooksConfigured, setupHooks } from '../setup/index.js';
 import { clearSessions, getSessions } from '../store/file-store.js';
 import { getStatusDisplay } from '../utils/status.js';
@@ -117,6 +118,16 @@ program
   .description('Setup Claude Code hooks for monitoring')
   .action(async () => {
     await setupHooks();
+  });
+
+program
+  .command('serve')
+  .alias('s')
+  .description('Start web server for mobile monitoring')
+  .option('-p, --port <port>', 'Port number', '3456')
+  .action((options: { port: string }) => {
+    const port = parseInt(options.port, 10);
+    startServer(port);
   });
 
 /**

@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Claude Code Monitor</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      min-height: 100vh;
+      padding: 16px;
+      padding-top: env(safe-area-inset-top, 16px);
+      padding-bottom: env(safe-area-inset-bottom, 16px);
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #30363d;
+    }
+
+    .header h1 {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: #8b949e;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #3fb950;
+    }
+
+    .status-dot.disconnected {
+      background: #f85149;
+    }
+
+    .sessions-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .session-card {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 12px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .session-card:active {
+      transform: scale(0.98);
+      background: #1f2937;
+    }
+
+    .session-card.running {
+      border-left: 4px solid #3fb950;
+    }
+
+    .session-card.waiting_input {
+      border-left: 4px solid #d29922;
+    }
+
+    .session-card.stopped {
+      border-left: 4px solid #8b949e;
+    }
+
+    .session-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .session-status {
+      font-size: 18px;
+    }
+
+    .session-cwd {
+      font-size: 15px;
+      font-weight: 500;
+      color: #e6edf3;
+      word-break: break-all;
+    }
+
+    .session-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 8px;
+      font-size: 13px;
+      color: #8b949e;
+    }
+
+    .session-status-text {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .session-status-text.running {
+      color: #3fb950;
+    }
+
+    .session-status-text.waiting_input {
+      color: #d29922;
+    }
+
+    .session-status-text.stopped {
+      color: #8b949e;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #8b949e;
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .empty-state-text {
+      font-size: 16px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #238636;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+
+    .toast.show {
+      opacity: 1;
+    }
+
+    .toast.error {
+      background: #f85149;
+    }
+
+    @media (prefers-color-scheme: light) {
+      body {
+        background: #ffffff;
+        color: #24292f;
+      }
+
+      .header {
+        border-bottom-color: #d0d7de;
+      }
+
+      .status-indicator {
+        color: #57606a;
+      }
+
+      .session-card {
+        background: #f6f8fa;
+        border-color: #d0d7de;
+      }
+
+      .session-card:active {
+        background: #eaeef2;
+      }
+
+      .session-cwd {
+        color: #24292f;
+      }
+
+      .session-meta {
+        color: #57606a;
+      }
+
+      .empty-state {
+        color: #57606a;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Claude Code Monitor</h1>
+    <div class="status-indicator">
+      <div class="status-dot" id="connectionDot"></div>
+      <span id="connectionStatus">Connecting...</span>
+    </div>
+  </div>
+
+  <div class="sessions-container" id="sessions">
+    <div class="empty-state">
+      <div class="empty-state-icon">...</div>
+      <div class="empty-state-text">Connecting to server...</div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const sessionsContainer = document.getElementById('sessions');
+    const connectionDot = document.getElementById('connectionDot');
+    const connectionStatus = document.getElementById('connectionStatus');
+    const toast = document.getElementById('toast');
+
+    let ws = null;
+    let reconnectTimer = null;
+
+    const STATUS_LABELS = {
+      running: 'Running',
+      waiting_input: 'Waiting',
+      stopped: 'Stopped'
+    };
+
+    const STATUS_ICONS = {
+      running: '>>',
+      waiting_input: '??',
+      stopped: '--'
+    };
+
+    function showToast(message, isError = false) {
+      toast.textContent = message;
+      toast.className = isError ? 'toast error show' : 'toast show';
+      setTimeout(() => {
+        toast.className = 'toast';
+      }, 2000);
+    }
+
+    function setConnectionStatus(connected) {
+      if (connected) {
+        connectionDot.classList.remove('disconnected');
+        connectionStatus.textContent = 'Connected';
+      } else {
+        connectionDot.classList.add('disconnected');
+        connectionStatus.textContent = 'Disconnected';
+      }
+    }
+
+    function formatPath(path) {
+      return path.replace(/^\/Users\/[^/]+/, '~');
+    }
+
+    function formatTime(isoString) {
+      const date = new Date(isoString);
+      const now = new Date();
+      const diff = (now.getTime() - date.getTime()) / 1000;
+
+      if (diff < 60) return 'Just now';
+      if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+      if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+      return date.toLocaleDateString();
+    }
+
+    function renderSessions(sessions) {
+      if (!sessions || sessions.length === 0) {
+        sessionsContainer.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">_</div>
+            <div class="empty-state-text">No active sessions</div>
+          </div>
+        `;
+        return;
+      }
+
+      sessionsContainer.innerHTML = sessions.map(session => `
+        <div class="session-card ${session.status}" onclick="focusSession('${session.session_id}')">
+          <div class="session-header">
+            <span class="session-status">${STATUS_ICONS[session.status]}</span>
+            <span class="session-cwd">${formatPath(session.cwd)}</span>
+          </div>
+          <div class="session-meta">
+            <span class="session-status-text ${session.status}">${STATUS_LABELS[session.status]}</span>
+            <span>${formatTime(session.updated_at)}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function focusSession(sessionId) {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'focus', sessionId }));
+        showToast('Focusing terminal...');
+      } else {
+        showToast('Not connected', true);
+      }
+    }
+
+    function connect() {
+      const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      ws = new WebSocket(`${protocol}//${location.host}`);
+
+      ws.onopen = () => {
+        setConnectionStatus(true);
+        if (reconnectTimer) {
+          clearTimeout(reconnectTimer);
+          reconnectTimer = null;
+        }
+      };
+
+      ws.onclose = () => {
+        setConnectionStatus(false);
+        // Reconnect after 2 seconds
+        reconnectTimer = setTimeout(connect, 2000);
+      };
+
+      ws.onerror = () => {
+        setConnectionStatus(false);
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+          if (message.type === 'sessions') {
+            renderSessions(message.data);
+          } else if (message.type === 'focusResult') {
+            if (message.success) {
+              showToast('Terminal focused!');
+            } else {
+              showToast('Could not focus terminal', true);
+            }
+          }
+        } catch (e) {
+          console.error('Failed to parse message:', e);
+        }
+      };
+    }
+
+    // Start connection
+    connect();
+
+    // Prevent pull-to-refresh on mobile
+    document.body.addEventListener('touchmove', (e) => {
+      if (e.touches.length > 1) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+  </script>
+</body>
+</html>
