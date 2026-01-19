@@ -1,6 +1,7 @@
 import { Box, Text, useApp, useInput } from 'ink';
 import type React from 'react';
 import { useMemo, useState } from 'react';
+import { useServer } from '../hooks/useServer.js';
 import { useSessions } from '../hooks/useSessions.js';
 import { clearSessions } from '../store/file-store.js';
 import { focusSession } from '../utils/focus.js';
@@ -10,6 +11,7 @@ const QUICK_SELECT_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
 export function Dashboard(): React.ReactElement {
   const { sessions, loading, error } = useSessions();
+  const { url, qrCode, loading: serverLoading } = useServer();
   const [selectedIndex, setSelectedIndex] = useState(0);
   const { exit } = useApp();
 
@@ -79,6 +81,7 @@ export function Dashboard(): React.ReactElement {
 
   return (
     <Box flexDirection="column">
+      {/* Header */}
       <Box borderStyle="round" borderColor="cyan" paddingX={1}>
         <Text bold color="cyan">
           Claude Code Monitor
@@ -91,14 +94,8 @@ export function Dashboard(): React.ReactElement {
         <Text color="cyan">✓ {stopped}</Text>
       </Box>
 
-      <Box
-        flexDirection="column"
-        borderStyle="round"
-        borderColor="gray"
-        marginTop={1}
-        paddingX={1}
-        paddingY={0}
-      >
+      {/* Sessions */}
+      <Box flexDirection="column" borderStyle="round" borderColor="gray" marginTop={1} paddingX={1}>
         {sessions.length === 0 ? (
           <Box paddingY={1}>
             <Text dimColor>No active sessions</Text>
@@ -115,6 +112,7 @@ export function Dashboard(): React.ReactElement {
         )}
       </Box>
 
+      {/* Keyboard Shortcuts */}
       <Box marginTop={1} justifyContent="center" gap={1}>
         <Text dimColor>[↑↓]Select</Text>
         <Text dimColor>[Enter]Focus</Text>
@@ -122,6 +120,23 @@ export function Dashboard(): React.ReactElement {
         <Text dimColor>[c]Clear</Text>
         <Text dimColor>[q]Quit</Text>
       </Box>
+
+      {/* Web UI */}
+      {!serverLoading && qrCode && (
+        <Box borderStyle="round" borderColor="gray" marginTop={1} paddingX={1}>
+          <Box flexShrink={0}>
+            <Text>{qrCode}</Text>
+          </Box>
+          <Box flexDirection="column" marginLeft={2} justifyContent="center">
+            <Text bold color="magenta">
+              Web UI
+            </Text>
+            <Text dimColor>{url}</Text>
+            <Text dimColor>Scan QR code to monitor sessions from your phone.</Text>
+            <Text dimColor>Tap a session to focus its terminal on this Mac.</Text>
+          </Box>
+        </Box>
+      )}
     </Box>
   );
 }

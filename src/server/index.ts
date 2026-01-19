@@ -3,6 +3,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import { networkInterfaces } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import type { FSWatcher } from 'chokidar';
 import chokidar from 'chokidar';
 import qrcode from 'qrcode-terminal';
 import { type WebSocket, WebSocketServer } from 'ws';
@@ -22,7 +23,13 @@ interface BroadcastMessage {
   data: Session[];
 }
 
-function getLocalIP(): string {
+export interface ServerInfo {
+  url: string;
+  qrCode: string;
+  stop: () => void;
+}
+
+export function getLocalIP(): string {
   const interfaces = networkInterfaces();
   for (const name of Object.keys(interfaces)) {
     const iface = interfaces[name];
@@ -34,6 +41,14 @@ function getLocalIP(): string {
     }
   }
   return 'localhost';
+}
+
+export function generateQRCode(text: string): Promise<string> {
+  return new Promise((resolve) => {
+    qrcode.generate(text, { small: true }, (qrCode: string) => {
+      resolve(qrCode);
+    });
+  });
 }
 
 function getContentType(path: string): string {
@@ -62,9 +77,12 @@ function serveStatic(req: IncomingMessage, res: ServerResponse): void {
   }
 }
 
-export function startServer(port = 3456): void {
+export async function createMobileServer(port = 3456): Promise<ServerInfo> {
   const localIP = getLocalIP();
   const url = `http://${localIP}:${port}`;
+
+  // Generate QR code
+  const qrCode = await generateQRCode(url);
 
   // HTTP server for static files
   const server = createServer(serveStatic);
@@ -113,6 +131,83 @@ export function startServer(port = 3456): void {
   // Watch sessions.json for changes
   const storePath = getStorePath();
   const watcher = chokidar.watch(storePath, {
+    ignoreInitial: true,
+    awaitWriteFinish: {
+      stabilityThreshold: 100,
+      pollInterval: 50,
+    },
+  });
+
+  watcher.on('change', () => {
+    const sessions = getSessions();
+    broadcast({ type: 'sessions', data: sessions });
+  });
+
+  // Start server
+  await new Promise<void>((resolve) => {
+    server.listen(port, '0.0.0.0', resolve);
+  });
+
+  // Return server info with stop function
+  const stop = () => {
+    watcher.close();
+    wss.close();
+    server.close();
+  };
+
+  return { url, qrCode, stop };
+}
+
+// CLI standalone mode
+export function startServer(port = 3456): void {
+  const localIP = getLocalIP();
+  const url = `http://${localIP}:${port}`;
+
+  // HTTP server for static files
+  const server = createServer(serveStatic);
+
+  // WebSocket server
+  const wss = new WebSocketServer({ server });
+
+  let watcher: FSWatcher;
+
+  function broadcast(message: BroadcastMessage): void {
+    const data = JSON.stringify(message);
+    for (const client of wss.clients) {
+      if (client.readyState === 1) {
+        client.send(data);
+      }
+    }
+  }
+
+  function sendSessions(ws: WebSocket): void {
+    const sessions = getSessions();
+    ws.send(JSON.stringify({ type: 'sessions', data: sessions }));
+  }
+
+  wss.on('connection', (ws: WebSocket) => {
+    sendSessions(ws);
+
+    ws.on('message', (data: Buffer) => {
+      try {
+        const message = JSON.parse(data.toString()) as WebSocketMessage;
+
+        if (message.type === 'focus' && message.sessionId) {
+          const sessions = getSessions();
+          const session = sessions.find((s) => s.session_id === message.sessionId);
+          if (session?.tty) {
+            const success = focusSession(session.tty);
+            ws.send(JSON.stringify({ type: 'focusResult', success }));
+          }
+        }
+      } catch {
+        // Ignore invalid messages
+      }
+    });
+  });
+
+  const storePath = getStorePath();
+  watcher = chokidar.watch(storePath, {
     ignoreInitial: true,
     awaitWriteFinish: {
       stabilityThreshold: 100,
