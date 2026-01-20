@@ -126,7 +126,13 @@ export async function createMobileServer(port = 3456): Promise<ServerInfo> {
             const success = focusSession(session.tty);
             ws.send(JSON.stringify({ type: 'focusResult', success }));
           } else {
-            ws.send(JSON.stringify({ type: 'focusResult', success: false, error: 'Session not found or no TTY' }));
+            ws.send(
+              JSON.stringify({
+                type: 'focusResult',
+                success: false,
+                error: 'Session not found or no TTY',
+              })
+            );
           }
         } else if (message.type === 'sendText' && message.sessionId && message.text) {
           // Find session by ID and send text
@@ -218,7 +224,13 @@ export function startServer(port = 3456): void {
             const success = focusSession(session.tty);
             ws.send(JSON.stringify({ type: 'focusResult', success }));
           } else {
-            ws.send(JSON.stringify({ type: 'focusResult', success: false, error: 'Session not found or no TTY' }));
+            ws.send(
+              JSON.stringify({
+                type: 'focusResult',
+                success: false,
+                error: 'Session not found or no TTY',
+              })
+            );
           }
         } else if (message.type === 'sendText' && message.sessionId && message.text) {
           const sessions = getSessions();

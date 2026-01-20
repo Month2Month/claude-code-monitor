@@ -11,6 +11,15 @@ export { isTtyAlive } from '../utils/tty-cache.js';
 
 const STORE_DIR = join(homedir(), '.claude-monitor');
 const STORE_FILE = join(STORE_DIR, 'sessions.json');
+const SETTINGS_FILE = join(STORE_DIR, 'settings.json');
+
+export interface Settings {
+  qrCodeVisible: boolean;
+}
+
+const DEFAULT_SETTINGS: Settings = {
+  qrCodeVisible: true,
+};
 
 // In-memory cache for batched writes
 let cachedStore: StoreData | null = null;
@@ -226,4 +235,30 @@ export function clearSessions(): void {
 
 export function getStorePath(): string {
   return STORE_FILE;
+}
+
+export function readSettings(): Settings {
+  ensureStoreDir();
+  if (!existsSync(SETTINGS_FILE)) {
+    return DEFAULT_SETTINGS;
+  }
+  try {
+    const content = readFileSync(SETTINGS_FILE, 'utf-8');
+    const parsed = JSON.parse(content) as Partial<Settings>;
+    return { ...DEFAULT_SETTINGS, ...parsed };
+  } catch {
+    return DEFAULT_SETTINGS;
+  }
+}
+
+export function writeSettings(settings: Settings): void {
+  ensureStoreDir();
+  try {
+    writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2), {
+      encoding: 'utf-8',
+      mode: 0o600,
+    });
+  } catch {
+    // Silently ignore write errors
+  }
 }

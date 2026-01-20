@@ -3,7 +3,7 @@ import type React from 'react';
 import { useMemo, useState } from 'react';
 import { useServer } from '../hooks/useServer.js';
 import { useSessions } from '../hooks/useSessions.js';
-import { clearSessions } from '../store/file-store.js';
+import { clearSessions, readSettings, writeSettings } from '../store/file-store.js';
 import { focusSession } from '../utils/focus.js';
 import { SessionCard } from './SessionCard.js';
 
@@ -21,7 +21,16 @@ export function Dashboard(): React.ReactElement {
   const { exit } = useApp();
 
   // 起動時のターミナルサイズに基づいてQRコード表示を決定（リサイズで変わらない）
-  const showQrCode = INITIAL_ROWS >= MIN_ROWS_FOR_QR;
+  const hasEnoughRows = INITIAL_ROWS >= MIN_ROWS_FOR_QR;
+
+  // ユーザー設定からQRコード表示状態を読み込む（初回は表示）
+  const [qrCodeVisible, setQrCodeVisible] = useState(() => readSettings().qrCodeVisible);
+
+  const toggleQrCode = () => {
+    const newValue = !qrCodeVisible;
+    setQrCodeVisible(newValue);
+    writeSettings({ qrCodeVisible: newValue });
+  };
 
   const focusSessionByIndex = (index: number) => {
     const session = sessions[index];
@@ -74,6 +83,10 @@ export function Dashboard(): React.ReactElement {
     if (input === 'c') {
       clearSessions();
       setSelectedIndex(0);
+      return;
+    }
+    if (input === 'h' && hasEnoughRows) {
+      toggleQrCode();
     }
   });
 
@@ -133,23 +146,30 @@ export function Dashboard(): React.ReactElement {
       </Box>
 
       {/* Web UI */}
-      {!serverLoading && qrCode && showQrCode && (
+      {!serverLoading && url && hasEnoughRows && (
         <Box marginTop={1} paddingX={1}>
-          <Box flexShrink={0}>
-            <Text>{qrCode}</Text>
-          </Box>
-          <Box flexDirection="column" marginLeft={2} justifyContent="center">
+          {qrCodeVisible && qrCode && (
+            <Box flexShrink={0}>
+              <Text>{qrCode}</Text>
+            </Box>
+          )}
+          <Box
+            flexDirection="column"
+            marginLeft={qrCodeVisible && qrCode ? 2 : 0}
+            justifyContent="center"
+          >
             <Text bold color="magenta">
               Web UI
             </Text>
             <Text dimColor>{url}</Text>
             <Text dimColor>Scan QR code to monitor sessions from your phone.</Text>
             <Text dimColor>Tap a session to focus its terminal on this Mac.</Text>
+            <Text dimColor>[h] {qrCodeVisible ? 'Hide' : 'Show'} QR code</Text>
           </Box>
         </Box>
       )}
       {/* URLのみ表示（高さが足りない場合） */}
-      {!serverLoading && url && !showQrCode && (
+      {!serverLoading && url && !hasEnoughRows && (
         <Box marginTop={1} paddingX={1}>
           <Text bold color="magenta">
             Web UI:{' '}
