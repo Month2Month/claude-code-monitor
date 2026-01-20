@@ -654,9 +654,71 @@
       background: var(--bg-input);
       color: var(--text-muted);
     }
+
+    /* Desktop Warning */
+    .desktop-warning {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding: 32px;
+      text-align: center;
+    }
+
+    .desktop-warning-icon {
+      font-size: 64px;
+      margin-bottom: 24px;
+    }
+
+    .desktop-warning-title {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .desktop-warning-text {
+      font-size: 16px;
+      color: var(--text-secondary);
+      max-width: 400px;
+      line-height: 1.6;
+    }
+
+    .desktop-qr {
+      margin-top: 32px;
+      border-radius: var(--radius-md);
+    }
+
+    .desktop-url {
+      margin-top: 16px;
+      font-size: 14px;
+      color: var(--text-muted);
+      font-family: 'SF Mono', Menlo, monospace;
+    }
+
+    @media (min-width: 1025px) {
+      .app, .toast, .modal-bg {
+        display: none !important;
+      }
+      .desktop-warning {
+        display: flex;
+      }
+    }
   </style>
 </head>
 <body>
+  <div class="desktop-warning">
+    <div class="desktop-warning-icon">📱</div>
+    <h1 class="desktop-warning-title">Mobile Only</h1>
+    <p class="desktop-warning-text">
+      This interface is designed for smartphones and tablets only.<br>
+      Scan the QR code below to access from your mobile device.
+    </p>
+    <img id="qrcode" class="desktop-qr" alt="QR Code">
+    <p class="desktop-url" id="desktopUrl"></p>
+  </div>
+
   <div class="app">
     <header class="header">
       <h1 class="header-title">Claude Code Monitor</h1>
@@ -959,6 +1021,22 @@
     }
 
     connect();
+
+    // Generate QR code for desktop warning using Google Charts API
+    (function generateQRCode() {
+      const qrImg = document.getElementById('qrcode');
+      const urlDisplay = document.getElementById('desktopUrl');
+      const currentUrl = window.location.href;
+
+      if (qrImg) {
+        const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(currentUrl)}&bgcolor=1a1a1a&color=ffffff`;
+        qrImg.src = qrApiUrl;
+      }
+
+      if (urlDisplay) {
+        urlDisplay.textContent = currentUrl;
+      }
+    })();
 
     // Prevent zoom on double-tap
     document.body.addEventListener('touchmove', (e) => {
