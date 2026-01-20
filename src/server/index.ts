@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import chokidar from 'chokidar';
 import qrcode from 'qrcode-terminal';
 import { type WebSocket, WebSocketServer } from 'ws';
-import { getSessions, getStorePath } from '../store/file-store.js';
+import { clearSessions, getSessions, getStorePath } from '../store/file-store.js';
 import type { Session } from '../types/index.js';
 import { focusSession } from '../utils/focus.js';
 import { sendTextToTerminal } from '../utils/send-text.js';
@@ -22,7 +22,7 @@ function generateAuthToken(): string {
 }
 
 interface WebSocketMessage {
-  type: 'sessions' | 'focus' | 'sendText';
+  type: 'sessions' | 'focus' | 'sendText' | 'clearSessions';
   sessionId?: string;
   text?: string;
 }
@@ -76,8 +76,26 @@ function handleSendTextCommand(ws: WebSocket, sessionId: string, text: string): 
 }
 
 /**
+ * Handle clearSessions command from WebSocket client.
+ */
+function handleClearSessionsCommand(ws: WebSocket): void {
+  try {
+    clearSessions();
+    ws.send(JSON.stringify({ type: 'clearSessionsResult', success: true }));
+  } catch {
+    ws.send(
+      JSON.stringify({
+        type: 'clearSessionsResult',
+        success: false,
+        error: 'Failed to clear sessions',
+      })
+    );
+  }
+}
+
+/**
  * Handle incoming WebSocket message from client.
- * Processes focus and sendText commands.
+ * Processes focus, sendText, and clearSessions commands.
  */
 function handleWebSocketMessage(ws: WebSocket, data: Buffer): void {
   let message: WebSocketMessage;
@@ -94,6 +112,11 @@ function handleWebSocketMessage(ws: WebSocket, data: Buffer): void {
 
   if (message.type === 'sendText' && message.sessionId && message.text) {
     handleSendTextCommand(ws, message.sessionId, message.text);
+    return;
+  }
+
+  if (message.type === 'clearSessions') {
+    handleClearSessionsCommand(ws);
   }
 }
 

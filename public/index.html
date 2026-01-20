@@ -106,6 +106,34 @@
       50% { opacity: 0.4; }
     }
 
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .clear-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 14px;
+      background: var(--bg-card);
+      border: none;
+      border-radius: 20px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: all 0.15s;
+    }
+
+    .clear-btn:active {
+      background: var(--bg-card-hover);
+      transform: scale(0.95);
+    }
+
     /* Session List */
     .sessions {
       display: flex;
@@ -689,7 +717,8 @@
       border-radius: var(--radius-md);
     }
 
-    @media (min-width: 1025px) {
+    /* Show desktop warning only on non-touch devices with large screens */
+    @media (min-width: 1025px) and (pointer: fine) {
       .app, .toast, .modal-bg {
         display: none !important;
       }
@@ -713,9 +742,12 @@
   <div class="app">
     <header class="header">
       <h1 class="header-title">Claude Code Monitor</h1>
-      <div class="conn-badge" id="connStatus">
-        <span class="conn-dot"></span>
-        <span id="connText">Connecting</span>
+      <div class="header-actions">
+        <button class="clear-btn" onclick="clearAllSessions()">Clear</button>
+        <div class="conn-badge" id="connStatus">
+          <span class="conn-dot"></span>
+          <span id="connText">Connecting</span>
+        </div>
       </div>
     </header>
 
@@ -888,6 +920,12 @@
       toast('Focusing...');
     }
 
+    function clearAllSessions() {
+      if (!ws || ws.readyState !== 1) return toast('Not connected', 'err');
+      ws.send(JSON.stringify({ type: 'clearSessions' }));
+      toast('Clearing...');
+    }
+
     $msgInput.addEventListener('input', () => {
       const inputText = $msgInput.value.trim();
       $sendBtn.disabled = !inputText;
@@ -1020,6 +1058,8 @@
             $sendBtn.textContent = 'Send';
             toast(message.success ? 'Sent!' : (message.error || 'Failed'), message.success ? 'ok' : 'err');
             if (message.success) closeModal();
+          } else if (message.type === 'clearSessionsResult') {
+            toast(message.success ? 'Cleared!' : (message.error || 'Failed'), message.success ? 'ok' : 'err');
           }
         } catch {}
       };
