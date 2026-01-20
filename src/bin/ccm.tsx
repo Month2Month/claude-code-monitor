@@ -54,10 +54,20 @@ async function runWithAltScreen(renderFn: () => ReturnType<typeof render>) {
   process.stdout.write(ENTER_ALT_SCREEN);
   // カーソルを非表示にして、より安定したレンダリングを行う
   process.stdout.write('\x1b[?25l');
-  const { waitUntilExit } = renderFn();
+
+  const instance = renderFn();
+
+  // リサイズ時にInkの描画をクリアして再描画
+  const handleResize = () => {
+    instance.clear();
+    instance.rerender(<Dashboard />);
+  };
+  process.stdout.on('resize', handleResize);
+
   try {
-    await waitUntilExit();
+    await instance.waitUntilExit();
   } finally {
+    process.stdout.off('resize', handleResize);
     // カーソルを再表示
     process.stdout.write('\x1b[?25h');
     process.stdout.write(EXIT_ALT_SCREEN);
