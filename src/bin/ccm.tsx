@@ -52,10 +52,14 @@ function getTtyFromAncestors(): string | undefined {
  */
 async function runWithAltScreen(renderFn: () => ReturnType<typeof render>) {
   process.stdout.write(ENTER_ALT_SCREEN);
+  // カーソルを非表示にして、より安定したレンダリングを行う
+  process.stdout.write('\x1b[?25l');
   const { waitUntilExit } = renderFn();
   try {
     await waitUntilExit();
   } finally {
+    // カーソルを再表示
+    process.stdout.write('\x1b[?25h');
     process.stdout.write(EXIT_ALT_SCREEN);
   }
 }
@@ -72,7 +76,7 @@ program
   .alias('w')
   .description('Start the monitoring TUI')
   .action(async () => {
-    await runWithAltScreen(() => render(<Dashboard />));
+    await runWithAltScreen(() => render(<Dashboard />, { patchConsole: false }));
   });
 
 program
@@ -149,7 +153,7 @@ async function defaultAction() {
   }
 
   // Launch monitor
-  await runWithAltScreen(() => render(<Dashboard />));
+  await runWithAltScreen(() => render(<Dashboard />, { patchConsole: false }));
 }
 
 // Default action when executed without commands

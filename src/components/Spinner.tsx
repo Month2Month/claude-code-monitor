@@ -3,7 +3,7 @@ import type React from 'react';
 import { useSyncExternalStore } from 'react';
 
 const SPINNER_FRAMES = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
-const FRAME_INTERVAL_MS = 120; // Slightly slower for less CPU usage
+const FRAME_INTERVAL_MS = 200; // 200msでチラつきを軽減
 
 // Shared global spinner state - only ONE timer for all spinners
 let globalFrame = 0;
