@@ -173,7 +173,7 @@ export function Dashboard({ initialShowQr }: DashboardProps): React.ReactElement
       {/* Web UI hint - shown when URL is hidden */}
       {!serverLoading && url && !qrCodeUserPref && (
         <Box marginTop={1} borderStyle="round" borderColor="gray" paddingX={1}>
-          <Text dimColor>
+          <Text color="white">
             📱 Web UI available. Press [h] to show QR code for mobile access. (URL hidden for
             security)
           </Text>
