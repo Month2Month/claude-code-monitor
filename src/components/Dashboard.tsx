@@ -198,6 +198,7 @@ export function Dashboard({ initialShowQr }: DashboardProps): React.ReactElement
             <Text dimColor>{url}</Text>
             <Text dimColor>Scan QR code to monitor sessions from your phone.</Text>
             <Text dimColor>Tap a session to focus its terminal on this Mac.</Text>
+            <Text color="yellow">⚠ Do not share this URL with others.</Text>
             {!canShowQr && <Text color="yellow">⚠ Resize window to show QR code</Text>}
           </Box>
         </Box>
