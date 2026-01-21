@@ -1005,13 +1005,11 @@
       if (!targetSession) return;
       if (!ws || ws.readyState !== 1) return toast('Not connected', 'err');
       ws.send(JSON.stringify({ type: 'focus', sessionId: targetSession }));
-      toast('Focusing...');
     }
 
     function clearAllSessions() {
       if (!ws || ws.readyState !== 1) return toast('Not connected', 'err');
       ws.send(JSON.stringify({ type: 'clearSessions' }));
-      toast('Clearing...');
     }
 
     $msgInput.addEventListener('input', () => {
@@ -1144,18 +1142,19 @@
           if (msg.type === 'sessions') {
             render(msg.data);
           } else if (msg.type === 'focusResult') {
-            toast(msg.success ? 'Focused!' : 'Failed', msg.success ? 'ok' : 'err');
+            if (!msg.success) toast('Failed', 'err');
           } else if (msg.type === 'sendTextResult') {
             pendingSend = null;
             $sendBtn.disabled = !$msgInput.value.trim();
-            toast(msg.success ? 'Sent!' : (msg.error || 'Failed'), msg.success ? 'ok' : 'err');
-            if (msg.success) {
+            if (!msg.success) {
+              toast(msg.error || 'Failed', 'err');
+            } else {
               $msgInput.value = '';
               $msgInput.style.height = '50px';
               $sendBtn.disabled = true;
             }
           } else if (msg.type === 'clearSessionsResult') {
-            toast(msg.success ? 'Cleared!' : (msg.error || 'Failed'), msg.success ? 'ok' : 'err');
+            if (!msg.success) toast(msg.error || 'Failed', 'err');
           }
         } catch {}
       };
