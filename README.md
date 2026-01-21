@@ -128,6 +128,8 @@ Monitor and control Claude Code sessions from your smartphone.
 - **Local Network Only** - Not accessible from the internet
 - **Do not share the URL** - Treat it like a password
 
+> **Warning**: Avoid using on public Wi-Fi networks (cafes, airports, etc.). Other users on the same network could potentially access your monitor. Use only on trusted private networks.
+
 ---
 
 ## 🖥️ Supported Terminals
