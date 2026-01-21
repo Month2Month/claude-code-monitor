@@ -144,13 +144,17 @@ function sendTextToGhostty(text: string): boolean {
  * Build AppleScript to send a single keystroke to iTerm2 session by TTY.
  * Used for permission prompts that expect single key input (y/n/a).
  */
-function buildITerm2KeystrokeScript(tty: string, key: string, useControl = false, useKeyCode?: number): string {
+function buildITerm2KeystrokeScript(
+  tty: string,
+  key: string,
+  useControl = false,
+  useKeyCode?: number
+): string {
   const safeTty = sanitizeForAppleScript(tty);
   const safeKey = sanitizeForAppleScript(key);
   const modifiers = useControl ? ' using control down' : '';
-  const keystrokeCmd = useKeyCode !== undefined
-    ? `key code ${useKeyCode}`
-    : `keystroke "${safeKey}"${modifiers}`;
+  const keystrokeCmd =
+    useKeyCode !== undefined ? `key code ${useKeyCode}` : `keystroke "${safeKey}"${modifiers}`;
   return `
 tell application "iTerm2"
   repeat with aWindow in windows
@@ -182,13 +186,17 @@ end tell
 /**
  * Build AppleScript to send a single keystroke to Terminal.app by TTY.
  */
-function buildTerminalAppKeystrokeScript(tty: string, key: string, useControl = false, useKeyCode?: number): string {
+function buildTerminalAppKeystrokeScript(
+  tty: string,
+  key: string,
+  useControl = false,
+  useKeyCode?: number
+): string {
   const safeTty = sanitizeForAppleScript(tty);
   const safeKey = sanitizeForAppleScript(key);
   const modifiers = useControl ? ' using control down' : '';
-  const keystrokeCmd = useKeyCode !== undefined
-    ? `key code ${useKeyCode}`
-    : `keystroke "${safeKey}"${modifiers}`;
+  const keystrokeCmd =
+    useKeyCode !== undefined ? `key code ${useKeyCode}` : `keystroke "${safeKey}"${modifiers}`;
   return `
 tell application "Terminal"
   repeat with aWindow in windows
@@ -218,9 +226,8 @@ end tell
 function buildGhosttyKeystrokeScript(key: string, useControl = false, useKeyCode?: number): string {
   const safeKey = sanitizeForAppleScript(key);
   const modifiers = useControl ? ' using control down' : '';
-  const keystrokeCmd = useKeyCode !== undefined
-    ? `key code ${useKeyCode}`
-    : `keystroke "${safeKey}"${modifiers}`;
+  const keystrokeCmd =
+    useKeyCode !== undefined ? `key code ${useKeyCode}` : `keystroke "${safeKey}"${modifiers}`;
   return `
 tell application "Ghostty"
   activate
@@ -296,13 +303,29 @@ export function sendTextToTerminal(
     ghostty: () => sendTextToGhostty(text),
   });
 
-  return success ? { success: true } : { success: false, error: 'Could not send text to any terminal' };
+  return success
+    ? { success: true }
+    : { success: false, error: 'Could not send text to any terminal' };
 }
 
 /**
  * Allowed keys for permission prompt responses.
  */
-const ALLOWED_KEYS = new Set(['y', 'n', 'a', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'escape']);
+const ALLOWED_KEYS = new Set([
+  'y',
+  'n',
+  'a',
+  '1',
+  '2',
+  '3',
+  '4',
+  '5',
+  '6',
+  '7',
+  '8',
+  '9',
+  'escape',
+]);
 
 /**
  * macOS key code for Escape key.
@@ -358,5 +381,7 @@ export function sendKeystrokeToTerminal(
     ghostty: () => sendKeystrokeToGhostty(key, useControl, useKeyCode),
   });
 
-  return success ? { success: true } : { success: false, error: 'Could not send keystroke to any terminal' };
+  return success
+    ? { success: true }
+    : { success: false, error: 'Could not send keystroke to any terminal' };
 }

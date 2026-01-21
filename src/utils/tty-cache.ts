@@ -50,4 +50,3 @@ export function isTtyAlive(tty: string | undefined): boolean {
   evictOldestIfNeeded();
   return alive;
 }
-
