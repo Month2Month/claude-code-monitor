@@ -65,8 +65,10 @@ On first run, it automatically sets up hooks and launches the monitor.
 
 ### Mobile Access
 
-1. Press `h` to show QR code
+1. Press `h` to show QR code (default port: 3456)
 2. Scan with your smartphone (same Wi-Fi required)
+
+> If port 3456 is in use, an available port is automatically selected.
 
 ---
 
@@ -114,13 +116,15 @@ Monitor and control Claude Code sessions from your smartphone.
 - Real-time session status via WebSocket
 - View latest Claude messages
 - Focus terminal sessions remotely
-- Send text messages to terminal
+- Send text messages to terminal (multi-line supported)
+- Swipe-to-close gesture on modal
+- Warning display for dangerous commands
 
 ### Security
 
 > **Important**: Your smartphone and Mac must be on the **same Wi-Fi network**.
 
-- **Token Authentication** - Each session generates a unique token
+- **Token Authentication** - A unique token is generated for authentication
 - **Local Network Only** - Not accessible from the internet
 - **Do not share the URL** - Treat it like a password
 
@@ -185,6 +189,18 @@ if (sessions[0]?.tty) {
 
 This is an unofficial community tool and is not affiliated with Anthropic.
 "Claude" and "Claude Code" are trademarks of Anthropic.
+
+---
+
+## 🐛 Issues
+
+Found a bug? [Open an issue](https://github.com/onikan27/claude-code-monitor/issues)
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please open an issue or submit a PR.
 
 ---
 
