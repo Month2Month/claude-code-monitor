@@ -49,15 +49,16 @@ Control from your phone (same Wi-Fi required)
 
 ## 🚀 Quick Start
 
-### Install
+### Run with npx (no install required)
+
+```bash
+npx claude-code-monitor
+```
+
+### Or install globally
 
 ```bash
 npm install -g claude-code-monitor
-```
-
-### Run
-
-```bash
 ccm
 ```
 
