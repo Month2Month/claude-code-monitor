@@ -81,18 +81,18 @@ describe('focus', () => {
 
   describe('generateTitleTag', () => {
     it('should generate tag from macOS tty path', () => {
-      expect(generateTitleTag('/dev/ttys001')).toBe('[CCM:ttys001]');
-      expect(generateTitleTag('/dev/ttys123')).toBe('[CCM:ttys123]');
+      expect(generateTitleTag('/dev/ttys001')).toBe('ccm:ttys001');
+      expect(generateTitleTag('/dev/ttys123')).toBe('ccm:ttys123');
     });
 
     it('should generate tag from macOS tty path without s', () => {
-      expect(generateTitleTag('/dev/tty0')).toBe('[CCM:tty0]');
-      expect(generateTitleTag('/dev/tty99')).toBe('[CCM:tty99]');
+      expect(generateTitleTag('/dev/tty0')).toBe('ccm:tty0');
+      expect(generateTitleTag('/dev/tty99')).toBe('ccm:tty99');
     });
 
     it('should generate tag from Linux pts path', () => {
-      expect(generateTitleTag('/dev/pts/0')).toBe('[CCM:pts-0]');
-      expect(generateTitleTag('/dev/pts/99')).toBe('[CCM:pts-99]');
+      expect(generateTitleTag('/dev/pts/0')).toBe('ccm:pts-0');
+      expect(generateTitleTag('/dev/pts/99')).toBe('ccm:pts-99');
     });
 
     it('should return empty string for invalid path', () => {
@@ -109,7 +109,7 @@ describe('focus', () => {
     });
 
     it('should handle title with CCM tag', () => {
-      expect(generateOscTitleSequence('[CCM:ttys001]')).toBe('\x1b]0;[CCM:ttys001]\x07');
+      expect(generateOscTitleSequence('ccm:ttys001')).toBe('\x1b]0;ccm:ttys001\x07');
     });
 
     it('should handle empty title', () => {
