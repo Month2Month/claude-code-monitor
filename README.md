@@ -157,7 +157,7 @@ Monitor and control Claude Code sessions from your smartphone.
 
 1. Verify you're using a supported terminal
 2. Check System Preferences > Privacy & Security > Accessibility
-3. For Ghostty: Ensure "Accessibility" permission is granted for System Events
+   - Ensure your terminal app has Accessibility permission
 
 ### Reset data
 
