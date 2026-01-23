@@ -1,10 +1,13 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   focusSession,
+  generateOscTitleSequence,
+  generateTitleTag,
   getSupportedTerminals,
   isMacOS,
   isValidTtyPath,
   sanitizeForAppleScript,
+  setTtyTitle,
 } from '../src/utils/focus.js';
 
 describe('focus', () => {
@@ -73,6 +76,56 @@ describe('focus', () => {
       expect(isValidTtyPath('/dev/ttys001"; rm -rf /')).toBe(false);
       expect(isValidTtyPath('/dev/ttys001\n/dev/ttys002')).toBe(false);
       expect(isValidTtyPath('/dev/pts/0; echo pwned')).toBe(false);
+    });
+  });
+
+  describe('generateTitleTag', () => {
+    it('should generate tag from macOS tty path', () => {
+      expect(generateTitleTag('/dev/ttys001')).toBe('ccm:ttys001');
+      expect(generateTitleTag('/dev/ttys123')).toBe('ccm:ttys123');
+    });
+
+    it('should generate tag from macOS tty path without s', () => {
+      expect(generateTitleTag('/dev/tty0')).toBe('ccm:tty0');
+      expect(generateTitleTag('/dev/tty99')).toBe('ccm:tty99');
+    });
+
+    it('should generate tag from Linux pts path', () => {
+      expect(generateTitleTag('/dev/pts/0')).toBe('ccm:pts-0');
+      expect(generateTitleTag('/dev/pts/99')).toBe('ccm:pts-99');
+    });
+
+    it('should return empty string for invalid path', () => {
+      expect(generateTitleTag('/invalid/path')).toBe('');
+      expect(generateTitleTag('')).toBe('');
+      expect(generateTitleTag('/dev/null')).toBe('');
+      expect(generateTitleTag('/dev/tty')).toBe('');
+    });
+  });
+
+  describe('generateOscTitleSequence', () => {
+    it('should generate valid OSC sequence', () => {
+      expect(generateOscTitleSequence('Test')).toBe('\x1b]0;Test\x07');
+    });
+
+    it('should handle title with CCM tag', () => {
+      expect(generateOscTitleSequence('ccm:ttys001')).toBe('\x1b]0;ccm:ttys001\x07');
+    });
+
+    it('should handle empty title', () => {
+      expect(generateOscTitleSequence('')).toBe('\x1b]0;\x07');
+    });
+  });
+
+  describe('setTtyTitle', () => {
+    it('should return false for invalid tty path', () => {
+      expect(setTtyTitle('/invalid/path', 'Test')).toBe(false);
+      expect(setTtyTitle('', 'Test')).toBe(false);
+    });
+
+    it('should return false for non-existent tty', () => {
+      // This TTY is unlikely to exist
+      expect(setTtyTitle('/dev/ttys999', 'Test')).toBe(false);
     });
   });
 

@@ -1,3 +1,4 @@
+import { accessSync, constants, writeFileSync } from 'node:fs';
 import { executeAppleScript } from './applescript.js';
 import { executeWithTerminalFallback } from './terminal-strategy.js';
 
@@ -32,6 +33,45 @@ const TTY_PATH_PATTERN = /^\/dev\/(ttys?\d+|pts\/\d+)$/;
  */
 export function isValidTtyPath(tty: string): boolean {
   return TTY_PATH_PATTERN.test(tty);
+}
+
+/**
+ * Generate a title tag for a TTY path.
+ * Used to identify terminal windows/tabs by their title.
+ * @example generateTitleTag('/dev/ttys001') => 'ccm:ttys001'
+ * @example generateTitleTag('/dev/pts/0') => 'ccm:pts-0'
+ * @internal
+ */
+export function generateTitleTag(tty: string): string {
+  const match = tty.match(/\/dev\/(ttys?\d+|pts\/\d+)$/);
+  if (!match) return '';
+  const ttyId = match[1].replace('/', '-');
+  return `ccm:${ttyId}`;
+}
+
+/**
+ * Generate an OSC (Operating System Command) escape sequence to set terminal title.
+ * OSC 0 sets both icon name and window title.
+ * @internal
+ */
+export function generateOscTitleSequence(title: string): string {
+  return `\x1b]0;${title}\x07`;
+}
+
+/**
+ * Set the terminal title by writing an OSC sequence to the TTY.
+ * Returns true if successful, false if the TTY is not writable.
+ * @internal
+ */
+export function setTtyTitle(tty: string, title: string): boolean {
+  if (!isValidTtyPath(tty)) return false;
+  try {
+    accessSync(tty, constants.W_OK);
+    writeFileSync(tty, generateOscTitleSequence(title));
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function buildITerm2Script(tty: string): string {
@@ -84,6 +124,30 @@ return true
 `;
 }
 
+function buildGhosttyFocusByTitleScript(titleTag: string): string {
+  const safeTag = sanitizeForAppleScript(titleTag);
+  return `
+tell application "System Events"
+  if not (exists process "Ghostty") then
+    return false
+  end if
+  tell process "Ghostty"
+    -- Try to find and click the window menu item with the title tag
+    try
+      set windowMenu to menu "Window" of menu bar 1
+      set menuItems to every menu item of windowMenu whose title contains "${safeTag}"
+      if (count of menuItems) > 0 then
+        click item 1 of menuItems
+        tell application "Ghostty" to activate
+        return true
+      end if
+    end try
+  end tell
+end tell
+return false
+`;
+}
+
 function focusITerm2(tty: string): boolean {
   return executeAppleScript(buildITerm2Script(tty));
 }
@@ -92,7 +156,19 @@ function focusTerminalApp(tty: string): boolean {
   return executeAppleScript(buildTerminalAppScript(tty));
 }
 
-function focusGhostty(): boolean {
+function focusGhostty(tty: string): boolean {
+  const titleTag = generateTitleTag(tty);
+
+  // Set title tag for window identification
+  setTtyTitle(tty, titleTag);
+  const success = executeAppleScript(buildGhosttyFocusByTitleScript(titleTag));
+
+  // Clear title to let shell-integration restore it
+  setTtyTitle(tty, '');
+
+  if (success) return true;
+
+  // Fallback: activate Ghostty without specific window focus
   return executeAppleScript(buildGhosttyScript());
 }
 
@@ -107,7 +183,7 @@ export function focusSession(tty: string): boolean {
   return executeWithTerminalFallback({
     iTerm2: () => focusITerm2(tty),
     terminalApp: () => focusTerminalApp(tty),
-    ghostty: () => focusGhostty(),
+    ghostty: () => focusGhostty(tty),
   });
 }
 
