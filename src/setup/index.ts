@@ -15,13 +15,13 @@ const DISABLE_TITLE_ENV_KEY = 'CLAUDE_CODE_DISABLE_TERMINAL_TITLE';
 const GHOSTTY_ASKED_ENV_KEY = 'CLAUDE_CODE_MONITOR_GHOSTTY_ASKED';
 
 /** @internal */
-export interface HookConfig {
+interface HookConfig {
   type: 'command';
   command: string;
 }
 
 /** @internal */
-export interface HookEntry {
+interface HookEntry {
   matcher?: string;
   hooks: HookConfig[];
 }
@@ -45,7 +45,7 @@ function isCcmHookCommand(command: string, eventName: string): boolean {
  * Check if the ccm hook is already configured for the given event
  * @internal
  */
-export function hasCcmHookForEvent(entries: HookEntry[] | undefined, eventName: string): boolean {
+function hasCcmHookForEvent(entries: HookEntry[] | undefined, eventName: string): boolean {
   if (!entries) return false;
   return entries.some((entry) => entry.hooks.some((h) => isCcmHookCommand(h.command, eventName)));
 }
@@ -65,7 +65,7 @@ function getCcmCommand(): string {
  * Check if Ghostty is installed
  * @internal
  */
-export function isGhosttyInstalled(): boolean {
+function isGhosttyInstalled(): boolean {
   // Check if Ghostty.app exists
   if (existsSync('/Applications/Ghostty.app')) {
     return true;
@@ -79,7 +79,7 @@ export function isGhosttyInstalled(): boolean {
  * Check if the Ghostty terminal title setting has been asked
  * @internal
  */
-export function hasGhosttySettingAsked(settings: Settings): boolean {
+function hasGhosttySettingAsked(settings: Settings): boolean {
   return settings.env?.[GHOSTTY_ASKED_ENV_KEY] === '1';
 }
 
@@ -107,7 +107,7 @@ function applyGhosttyTitleSetting(settings: Settings, enabled: boolean): void {
  * Create a hook entry for the given event
  * @internal
  */
-export function createHookEntry(eventName: string, baseCommand: string): HookEntry {
+function createHookEntry(eventName: string, baseCommand: string): HookEntry {
   const entry: HookEntry = {
     hooks: [
       {
@@ -143,7 +143,7 @@ function loadSettings(): Settings {
  * Determine which hooks need to be added or skipped
  * @internal
  */
-export function categorizeHooks(settings: Settings): { toAdd: string[]; toSkip: string[] } {
+function categorizeHooks(settings: Settings): { toAdd: string[]; toSkip: string[] } {
   const toAdd: string[] = [];
   const toSkip: string[] = [];
 

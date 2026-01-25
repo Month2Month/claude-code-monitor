@@ -275,7 +275,7 @@ export interface ServerInfo {
   stop: () => void;
 }
 
-export function getLocalIP(): string {
+function getLocalIP(): string {
   const interfaces = networkInterfaces();
   const allAddresses = Object.values(interfaces)
     .flat()
@@ -284,7 +284,7 @@ export function getLocalIP(): string {
   return externalIPv4?.address ?? 'localhost';
 }
 
-export function generateQRCode(text: string): Promise<string> {
+function generateQRCode(text: string): Promise<string> {
   return new Promise((resolve) => {
     qrcode.generate(text, { small: true }, (qrCode: string) => {
       resolve(qrCode);
