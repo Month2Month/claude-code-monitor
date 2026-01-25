@@ -8,14 +8,20 @@ import { askConfirmation } from '../utils/prompt.js';
 const CLAUDE_DIR = join(homedir(), '.claude');
 const SETTINGS_FILE = join(CLAUDE_DIR, 'settings.json');
 
+/** Environment variable key to disable Claude Code terminal title override */
+const DISABLE_TITLE_ENV_KEY = 'CLAUDE_CODE_DISABLE_TERMINAL_TITLE';
+
+/** Environment variable key to track if Ghostty setting was asked */
+const GHOSTTY_ASKED_ENV_KEY = 'CLAUDE_CODE_MONITOR_GHOSTTY_ASKED';
+
 /** @internal */
-export interface HookConfig {
+interface HookConfig {
   type: 'command';
   command: string;
 }
 
 /** @internal */
-export interface HookEntry {
+interface HookEntry {
   matcher?: string;
   hooks: HookConfig[];
 }
@@ -23,6 +29,7 @@ export interface HookEntry {
 /** @internal */
 export interface Settings {
   hooks?: Record<string, HookEntry[]>;
+  env?: Record<string, string>;
   [key: string]: unknown;
 }
 
@@ -38,7 +45,7 @@ function isCcmHookCommand(command: string, eventName: string): boolean {
  * Check if the ccm hook is already configured for the given event
  * @internal
  */
-export function hasCcmHookForEvent(entries: HookEntry[] | undefined, eventName: string): boolean {
+function hasCcmHookForEvent(entries: HookEntry[] | undefined, eventName: string): boolean {
   if (!entries) return false;
   return entries.some((entry) => entry.hooks.some((h) => isCcmHookCommand(h.command, eventName)));
 }
@@ -55,10 +62,52 @@ function getCcmCommand(): string {
 }
 
 /**
+ * Check if Ghostty is installed
+ * @internal
+ */
+function isGhosttyInstalled(): boolean {
+  // Check if Ghostty.app exists
+  if (existsSync('/Applications/Ghostty.app')) {
+    return true;
+  }
+  // Check if ghostty command is in PATH
+  const result = spawnSync('which', ['ghostty'], { encoding: 'utf-8' });
+  return result.status === 0;
+}
+
+/**
+ * Check if the Ghostty terminal title setting has been asked
+ * @internal
+ */
+function hasGhosttySettingAsked(settings: Settings): boolean {
+  return settings.env?.[GHOSTTY_ASKED_ENV_KEY] === '1';
+}
+
+/**
+ * Apply the Ghostty terminal title setting
+ * @param settings - Settings object to modify
+ * @param enabled - true to enable the env var, false to just mark as asked
+ * @internal
+ */
+function applyGhosttyTitleSetting(settings: Settings, enabled: boolean): void {
+  if (!settings.env) {
+    settings.env = {};
+  }
+
+  // Mark as asked so we don't prompt again
+  settings.env[GHOSTTY_ASKED_ENV_KEY] = '1';
+
+  // Only set disable title env var if user chose to enable
+  if (enabled) {
+    settings.env[DISABLE_TITLE_ENV_KEY] = '1';
+  }
+}
+
+/**
  * Create a hook entry for the given event
  * @internal
  */
-export function createHookEntry(eventName: string, baseCommand: string): HookEntry {
+function createHookEntry(eventName: string, baseCommand: string): HookEntry {
   const entry: HookEntry = {
     hooks: [
       {
@@ -94,7 +143,7 @@ function loadSettings(): Settings {
  * Determine which hooks need to be added or skipped
  * @internal
  */
-export function categorizeHooks(settings: Settings): { toAdd: string[]; toSkip: string[] } {
+function categorizeHooks(settings: Settings): { toAdd: string[]; toSkip: string[] } {
   const toAdd: string[] = [];
   const toSkip: string[] = [];
 
@@ -204,27 +253,99 @@ export async function setupHooks(): Promise<void> {
   const settings = loadSettings();
   const { toAdd: hooksToAdd, toSkip: hooksToSkip } = categorizeHooks(settings);
 
+  // Check for Ghostty and terminal title env
+  const ghosttyInstalled = isGhosttyInstalled();
+  const needsGhosttyPrompt = ghosttyInstalled && !hasGhosttySettingAsked(settings);
+
   // No changes needed
-  if (hooksToAdd.length === 0) {
+  if (hooksToAdd.length === 0 && !needsGhosttyPrompt) {
     console.log('All hooks already configured. No changes needed.');
     console.log('');
     console.log(`Start monitoring with: ${baseCommand} watch`);
     return;
   }
 
-  showSetupPreview(hooksToAdd, hooksToSkip, settingsExist);
+  let hooksApplied = false;
+  let envApplied = false;
 
-  const confirmed = await askConfirmation('Do you want to apply these changes?');
-  if (!confirmed) {
+  // Step 1: Hook setup
+  if (hooksToAdd.length > 0) {
+    showSetupPreview(hooksToAdd, hooksToSkip, settingsExist);
+
+    const confirmed = await askConfirmation('Do you want to apply these changes?');
+    if (confirmed) {
+      applyHooks(settings, hooksToAdd, baseCommand);
+      hooksApplied = true;
+      console.log('');
+      console.log(`Added ${hooksToAdd.length} hook(s) to ${SETTINGS_FILE}`);
+    } else {
+      console.log('');
+      console.log('Hook setup skipped.');
+    }
     console.log('');
-    console.log('Setup cancelled. No changes were made.');
-    return;
   }
 
-  applyHooks(settings, hooksToAdd, baseCommand);
+  // Step 2: Ghostty-specific setup (separate confirmation)
+  if (needsGhosttyPrompt) {
+    console.log('Ghostty detected.');
+    console.log('For reliable tab focus, Claude Code terminal title override should be disabled.');
+    console.log('');
+    const envConfirmed = await askConfirmation('Add CLAUDE_CODE_DISABLE_TERMINAL_TITLE setting?');
+    // Save decision so we don't ask again
+    applyGhosttyTitleSetting(settings, envConfirmed);
+    writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2), {
+      encoding: 'utf-8',
+      mode: 0o600,
+    });
+    if (envConfirmed) {
+      envApplied = true;
+      console.log('');
+      console.log('Ghostty setting added.');
+    } else {
+      console.log('');
+      console.log('Ghostty setting skipped (will not ask again).');
+    }
+    console.log('');
+  }
+
+  // Summary
+  if (hooksApplied || envApplied) {
+    console.log('Setup complete!');
+    console.log('');
+    console.log(`Start monitoring with: ${baseCommand} watch`);
+  } else {
+    console.log('No changes were made.');
+  }
+}
+
+/**
+ * Prompt for Ghostty setting if needed (called from ccm command when hooks are already configured)
+ */
+export async function promptGhosttySettingIfNeeded(): Promise<void> {
+  const ghosttyInstalled = isGhosttyInstalled();
+  if (!ghosttyInstalled) return;
+
+  const settings = loadSettings();
+  if (hasGhosttySettingAsked(settings)) return;
 
   console.log('');
-  console.log(`Setup complete! Added ${hooksToAdd.length} hook(s) to ${SETTINGS_FILE}`);
+  console.log('Ghostty detected.');
+  console.log('For reliable tab focus, Claude Code terminal title override should be disabled.');
   console.log('');
-  console.log(`Start monitoring with: ${baseCommand} watch`);
+  const envConfirmed = await askConfirmation('Add CLAUDE_CODE_DISABLE_TERMINAL_TITLE setting?');
+
+  applyGhosttyTitleSetting(settings, envConfirmed);
+  writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2), {
+    encoding: 'utf-8',
+    mode: 0o600,
+  });
+
+  if (envConfirmed) {
+    console.log('');
+    console.log('Ghostty setting added.');
+  } else {
+    console.log('');
+    console.log('Ghostty setting skipped (will not ask again).');
+  }
+  console.log('');
 }

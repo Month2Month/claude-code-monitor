@@ -6,7 +6,7 @@ import { render } from 'ink';
 import { Dashboard } from '../components/Dashboard.js';
 import { handleHookEvent } from '../hook/handler.js';
 import { startServer } from '../server/index.js';
-import { isHooksConfigured, setupHooks } from '../setup/index.js';
+import { isHooksConfigured, promptGhosttySettingIfNeeded, setupHooks } from '../setup/index.js';
 import { clearSessions, getSessions } from '../store/file-store.js';
 import { getStatusDisplay } from '../utils/status.js';
 
@@ -166,6 +166,9 @@ async function defaultAction(options: DashboardOptions = {}) {
       return;
     }
     console.log('');
+  } else {
+    // Hooks are configured, but check if Ghostty setting is needed
+    await promptGhosttySettingIfNeeded();
   }
 
   // Launch monitor

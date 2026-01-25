@@ -143,6 +143,23 @@ Monitor and control Claude Code sessions from your smartphone.
 
 > Other terminals can use monitoring, but focus feature is not supported.
 
+### Ghostty Users
+
+For reliable focus functionality with multiple tabs, `ccm` or `ccm setup` will prompt you to add the following setting:
+
+```json
+// ~/.claude/settings.json
+{
+  "env": {
+    "CLAUDE_CODE_DISABLE_TERMINAL_TITLE": "1"
+  }
+}
+```
+
+This prevents Claude Code from overwriting terminal titles, which is necessary for tab identification in Ghostty.
+
+If you skipped this during setup and want to enable it later, add the setting manually or delete `CLAUDE_CODE_MONITOR_GHOSTTY_ASKED` from your settings and run `ccm` again.
+
 ---
 
 ## 🔧 Troubleshooting

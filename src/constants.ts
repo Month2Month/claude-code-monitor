@@ -34,5 +34,3 @@ export const HOOK_EVENTS = [
   'Notification',
   'Stop',
 ] as const;
-
-export type HookEventName = (typeof HOOK_EVENTS)[number];
