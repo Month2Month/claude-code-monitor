@@ -127,6 +127,10 @@ return true
 function buildGhosttyFocusByTitleScript(titleTag: string): string {
   const safeTag = sanitizeForAppleScript(titleTag);
   return `
+-- Activate Ghostty first (required when called from Web UI with Ghostty in background)
+tell application "Ghostty" to activate
+delay 0.1
+
 tell application "System Events"
   if not (exists process "Ghostty") then
     return false
@@ -142,6 +146,7 @@ tell application "System Events"
         delay 0.05
         click item 1 of menuItems
         delay 0.05
+        -- Raise the correct window (overrides initial activate which may have raised wrong window)
         try
           perform action "AXRaise" of window 1
         end try
