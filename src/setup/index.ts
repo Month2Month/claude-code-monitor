@@ -317,3 +317,35 @@ export async function setupHooks(): Promise<void> {
     console.log('No changes were made.');
   }
 }
+
+/**
+ * Prompt for Ghostty setting if needed (called from ccm command when hooks are already configured)
+ */
+export async function promptGhosttySettingIfNeeded(): Promise<void> {
+  const ghosttyInstalled = isGhosttyInstalled();
+  if (!ghosttyInstalled) return;
+
+  const settings = loadSettings();
+  if (hasGhosttySettingAsked(settings)) return;
+
+  console.log('');
+  console.log('Ghostty detected.');
+  console.log('For reliable tab focus, Claude Code terminal title override should be disabled.');
+  console.log('');
+  const envConfirmed = await askConfirmation('Add CLAUDE_CODE_DISABLE_TERMINAL_TITLE setting?');
+
+  applyGhosttyTitleSetting(settings, envConfirmed);
+  writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2), {
+    encoding: 'utf-8',
+    mode: 0o600,
+  });
+
+  if (envConfirmed) {
+    console.log('');
+    console.log('Ghostty setting added.');
+  } else {
+    console.log('');
+    console.log('Ghostty setting skipped (will not ask again).');
+  }
+  console.log('');
+}
