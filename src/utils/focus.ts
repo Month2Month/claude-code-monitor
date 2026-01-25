@@ -132,16 +132,64 @@ tell application "System Events"
     return false
   end if
   tell process "Ghostty"
-    -- Try to find and click the window menu item with the title tag
+    -- First, try to find in Window menu (works if tab is currently active)
     try
       set windowMenu to menu "Window" of menu bar 1
       set menuItems to every menu item of windowMenu whose title contains "${safeTag}"
       if (count of menuItems) > 0 then
         click item 1 of menuItems
+        delay 0.1
         tell application "Ghostty" to activate
         return true
       end if
     end try
+
+    -- If not found in menu, the tab might be inactive.
+    -- We need to search through all windows and tabs.
+    -- First, remember the current frontmost window to restore if not found.
+    set originalWindow to missing value
+    try
+      set originalWindow to front window
+    end try
+
+    set windowCount to count of windows
+    repeat with winIdx from 1 to windowCount
+      try
+        -- Focus this window
+        set targetWindow to window winIdx
+        perform action "AXRaise" of targetWindow
+        tell application "Ghostty" to activate
+        delay 0.05
+
+        -- Check if current active tab already has the title
+        set winName to name of window 1
+        if winName contains "${safeTag}" then
+          return true
+        end if
+
+        -- Iterate through tabs using Cmd+N (goto_tab:N)
+        -- Ghostty default keybinds: super+1 to super+8 for goto_tab:1-8
+        repeat with tabIdx from 1 to 8
+          -- Switch to tab
+          keystroke (tabIdx as string) using {command down}
+          delay 0.08
+
+          -- Check the window title after tab switch
+          set winName to name of window 1
+          if winName contains "${safeTag}" then
+            return true
+          end if
+        end repeat
+      end try
+    end repeat
+
+    -- Not found - restore original window if possible
+    if originalWindow is not missing value then
+      try
+        perform action "AXRaise" of originalWindow
+        tell application "Ghostty" to activate
+      end try
+    end if
   end tell
 end tell
 return false
@@ -160,16 +208,22 @@ function focusGhostty(tty: string): boolean {
   const titleTag = generateTitleTag(tty);
 
   // Set title tag for window identification
-  setTtyTitle(tty, titleTag);
+  // This updates the terminal title so we can find it by searching
+  const titleSet = setTtyTitle(tty, titleTag);
 
-  // Wait for title to propagate to Window menu (Ghostty needs ~200-300ms)
-  const waitScript = 'delay 0.3';
-  executeAppleScript(waitScript);
+  if (titleSet) {
+    // Wait for title to propagate (terminal needs time to update)
+    const waitScript = 'delay 0.15';
+    executeAppleScript(waitScript);
+  }
 
+  // Try to focus by searching through windows and tabs
   const success = executeAppleScript(buildGhosttyFocusByTitleScript(titleTag));
 
   // Clear title to let shell-integration restore it
-  setTtyTitle(tty, '');
+  if (titleSet) {
+    setTtyTitle(tty, '');
+  }
 
   if (success) return true;
 
