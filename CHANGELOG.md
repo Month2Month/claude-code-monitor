@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.9] - 2026-01-25
+
+### Fixed
+
+- Improve Ghostty focus timing for multi-tab windows
+  - Use menu-based tab navigation ("Show Next Tab") instead of keystroke-based approach
+  - Works reliably regardless of user keybinding configuration
+  - Iterate through all windows and tabs to find the target session
+
+### Added
+
+- Auto-detect Ghostty and prompt for `CLAUDE_CODE_DISABLE_TERMINAL_TITLE` setting
+  - Prevents Claude Code from overwriting terminal titles during execution
+  - Required for reliable tab identification in Ghostty
+  - Prompt appears on `ccm` launch or `ccm setup` for Ghostty users
+  - User's choice is remembered to avoid repeated prompts
+
+### Changed
+
+- Separate confirmation prompts for hooks setup and Ghostty settings
+- Remove unused internal exports for cleaner API
+
 ## [1.1.8] - 2026-01-24
 
 ### Security
