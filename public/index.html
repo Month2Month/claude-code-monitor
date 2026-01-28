@@ -740,6 +740,301 @@
       box-shadow: none;
     }
 
+    /* Direction Pad */
+    .dpad-section {
+      flex-shrink: 0;
+      padding: 16px 20px;
+      border-top: 1px solid var(--border-subtle);
+      display: none;
+    }
+
+    .dpad-section.show {
+      display: block;
+    }
+
+    .dpad-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .dpad-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .dpad-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 48px);
+      grid-template-rows: repeat(3, 48px);
+      gap: 4px;
+    }
+
+    .dpad-btn {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-input);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 18px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition: all 0.15s ease;
+    }
+
+    .dpad-btn:active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+      transform: scale(0.95);
+    }
+
+    .dpad-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .dpad-btn:disabled:active {
+      background: var(--bg-input);
+      border-color: var(--border-default);
+      color: var(--text-primary);
+      transform: none;
+    }
+
+    .dpad-btn.dpad-up {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    .dpad-btn.dpad-down {
+      grid-column: 2;
+      grid-row: 3;
+    }
+
+    .dpad-btn.dpad-left {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    .dpad-btn.dpad-right {
+      grid-column: 3;
+      grid-row: 2;
+    }
+
+    .dpad-center {
+      grid-column: 2;
+      grid-row: 2;
+      width: 48px;
+      height: 48px;
+    }
+
+    .dpad-enter-btn {
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--status-running) 0%, #16a34a 100%);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+      transition: all 0.15s ease;
+    }
+
+    .dpad-enter-btn:active {
+      transform: scale(0.95);
+    }
+
+    .dpad-enter-btn:disabled {
+      background: var(--bg-input);
+      color: var(--text-muted);
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    .dpad-enter-btn:disabled:active {
+      transform: none;
+    }
+
+    /* Screen Capture */
+    .capture-section {
+      flex-shrink: 0;
+      padding: 16px 20px;
+      border-top: 1px solid var(--border-subtle);
+      display: none;
+    }
+
+    .capture-section.show {
+      display: block;
+    }
+
+    .capture-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .capture-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .capture-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 16px;
+      min-height: 44px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .capture-btn:active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+      transform: scale(0.95);
+    }
+
+    .capture-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .capture-btn:disabled:active {
+      background: var(--bg-input);
+      border-color: var(--border-default);
+      color: var(--text-primary);
+      transform: none;
+    }
+
+    .capture-btn.loading {
+      pointer-events: none;
+    }
+
+    .capture-btn.loading::after {
+      content: '';
+      width: 14px;
+      height: 14px;
+      border: 2px solid var(--border-default);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .capture-image-container {
+      display: none;
+      margin-top: 12px;
+    }
+
+    .capture-image-container.show {
+      display: block;
+    }
+
+    .capture-image {
+      width: 100%;
+      height: auto;
+      max-height: 300px;
+      object-fit: contain;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-default);
+      background: var(--bg-primary);
+    }
+
+    .capture-error {
+      display: none;
+      margin-top: 12px;
+      padding: 12px 14px;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      color: var(--danger);
+    }
+
+    .capture-error.show {
+      display: block;
+    }
+
+    /* Fullscreen Overlay */
+    .fullscreen-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      background: rgba(0, 0, 0, 0.9);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s, visibility 0.3s;
+    }
+
+    .fullscreen-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .fullscreen-overlay-close {
+      position: absolute;
+      top: calc(env(safe-area-inset-top, 16px) + 16px);
+      right: 16px;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.15);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      z-index: 2001;
+    }
+
+    .fullscreen-overlay-close:active {
+      background: rgba(255, 255, 255, 0.25);
+      transform: scale(0.95);
+    }
+
+    .fullscreen-overlay-image {
+      width: 100%;
+      height: auto;
+      max-width: 100vw;
+      max-height: 100vh;
+      object-fit: contain;
+      padding: 16px;
+    }
+
     /* Desktop Warning */
     .desktop-warning {
       display: none;
@@ -819,6 +1114,11 @@
 
   <div class="toast" id="toast"></div>
 
+  <div class="fullscreen-overlay" id="fullscreenOverlay">
+    <button class="fullscreen-overlay-close" id="fullscreenClose" aria-label="Close fullscreen">&times;</button>
+    <img class="fullscreen-overlay-image" id="fullscreenImage" alt="Fullscreen terminal screenshot" />
+  </div>
+
   <div class="modal-bg" id="modal">
     <div class="modal">
       <div class="modal-handle"></div>
@@ -842,6 +1142,29 @@
       </div>
       <div class="modal-waiting-notice" id="modalWaitingNotice" style="display: none;">
         <div class="modal-waiting-notice-text">Permission required. Please respond on PC.</div>
+      </div>
+      <div class="dpad-section" id="dpadSection">
+        <div class="dpad-label">Direction Keys</div>
+        <div class="dpad-container">
+          <div class="dpad-grid">
+            <button class="dpad-btn dpad-up" id="dpadUp" onclick="sendKeystroke('up')" aria-label="Up">&#9650;</button>
+            <button class="dpad-btn dpad-left" id="dpadLeft" onclick="sendKeystroke('left')" aria-label="Left">&#9664;</button>
+            <div class="dpad-center"></div>
+            <button class="dpad-btn dpad-right" id="dpadRight" onclick="sendKeystroke('right')" aria-label="Right">&#9654;</button>
+            <button class="dpad-btn dpad-down" id="dpadDown" onclick="sendKeystroke('down')" aria-label="Down">&#9660;</button>
+          </div>
+          <button class="dpad-enter-btn" id="dpadEnter" onclick="sendKeystroke('enter')" aria-label="Enter">Enter</button>
+        </div>
+      </div>
+      <div class="capture-section" id="captureSection">
+        <div class="capture-header">
+          <span class="capture-label">Screen Capture</span>
+          <button class="capture-btn" id="captureBtn" onclick="captureScreen()">Capture</button>
+        </div>
+        <div class="capture-image-container" id="captureImageContainer">
+          <img class="capture-image" id="captureImage" alt="Terminal screenshot" />
+        </div>
+        <div class="capture-error" id="captureError"></div>
       </div>
       <div class="modal-input">
         <div class="modal-input-row">
@@ -869,9 +1192,23 @@
     const $modalMessageLabel = document.getElementById('modalMessageLabel');
     const $modalMessage = document.getElementById('modalMessage');
     const $modalWaitingNotice = document.getElementById('modalWaitingNotice');
+    const $dpadSection = document.getElementById('dpadSection');
+    const $dpadUp = document.getElementById('dpadUp');
+    const $dpadDown = document.getElementById('dpadDown');
+    const $dpadLeft = document.getElementById('dpadLeft');
+    const $dpadRight = document.getElementById('dpadRight');
+    const $dpadEnter = document.getElementById('dpadEnter');
     const $msgInput = document.getElementById('msgInput');
     const $sendBtn = document.getElementById('sendBtn');
     const $warn = document.getElementById('warn');
+    const $captureSection = document.getElementById('captureSection');
+    const $captureBtn = document.getElementById('captureBtn');
+    const $captureImageContainer = document.getElementById('captureImageContainer');
+    const $captureImage = document.getElementById('captureImage');
+    const $captureError = document.getElementById('captureError');
+    const $fullscreenOverlay = document.getElementById('fullscreenOverlay');
+    const $fullscreenImage = document.getElementById('fullscreenImage');
+    const $fullscreenClose = document.getElementById('fullscreenClose');
 
     const TOAST_DURATION_MS = 2500;
     const RECONNECT_DELAY_MS = 2000;
@@ -882,6 +1219,7 @@
     let targetSession = null;
     let pendingSend = null;
     let sessionsData = [];
+    let captureDebounceTimer = null;
 
     // Event delegation for card clicks (safer than inline onclick)
     $sessions.addEventListener('click', (e) => {
@@ -1017,6 +1355,14 @@
       $msgInput.disabled = isWaiting;
       $msgInput.placeholder = isWaiting ? 'Waiting for permission...' : 'Send a message...';
 
+      // Show and enable direction pad when waiting for input
+      $dpadSection.classList.toggle('show', isWaiting);
+      setDpadEnabled(isWaiting);
+
+      // Show capture section when waiting for input
+      $captureSection.classList.toggle('show', isWaiting);
+      resetCaptureState();
+
       $modal.classList.add('show');
       document.body.style.overflow = 'hidden';
       if (!isWaiting) {
@@ -1043,6 +1389,13 @@
       $modalWaitingNotice.style.display = isWaiting ? 'block' : 'none';
       $msgInput.disabled = isWaiting;
       $msgInput.placeholder = isWaiting ? 'Waiting for permission...' : 'Send a message...';
+
+      // Update direction pad visibility
+      $dpadSection.classList.toggle('show', isWaiting);
+      setDpadEnabled(isWaiting);
+
+      // Update capture section visibility
+      $captureSection.classList.toggle('show', isWaiting);
     }
 
     function sendMsg() {
@@ -1077,6 +1430,100 @@
     function clearAllSessions() {
       if (!ws || ws.readyState !== 1) return toast('Not connected', 'err');
       ws.send(JSON.stringify({ type: 'clearSessions' }));
+    }
+
+    function sendKeystroke(key) {
+      if (!targetSession) return;
+      if (!ws || ws.readyState !== 1) return toast('Not connected', 'err');
+      ws.send(JSON.stringify({ type: 'sendKeystroke', sessionId: targetSession, key }));
+
+      // Debounce: reset timer and auto-capture after 300ms
+      if (captureDebounceTimer) {
+        clearTimeout(captureDebounceTimer);
+      }
+      captureDebounceTimer = setTimeout(() => {
+        captureDebounceTimer = null;
+        captureScreen();
+      }, 300);
+    }
+
+    function captureScreen() {
+      if (!targetSession) return;
+      if (!ws || ws.readyState !== 1) return toast('Not connected', 'err');
+
+      // Show loading state
+      $captureBtn.classList.add('loading');
+      $captureBtn.disabled = true;
+      $captureBtn.textContent = 'Capturing...';
+
+      // Hide previous results
+      $captureImageContainer.classList.remove('show');
+      $captureError.classList.remove('show');
+
+      ws.send(JSON.stringify({ type: 'captureScreen', sessionId: targetSession }));
+    }
+
+    function handleScreenCapture(data) {
+      // Reset button state
+      $captureBtn.classList.remove('loading');
+      $captureBtn.disabled = false;
+      $captureBtn.textContent = 'Capture';
+
+      // Show image
+      $captureImage.src = 'data:image/png;base64,' + data;
+      $captureImageContainer.classList.add('show');
+      $captureError.classList.remove('show');
+    }
+
+    function handleScreenCaptureError(message) {
+      // Reset button state
+      $captureBtn.classList.remove('loading');
+      $captureBtn.disabled = false;
+      $captureBtn.textContent = 'Capture';
+
+      // Show error
+      $captureError.textContent = message;
+      $captureError.classList.add('show');
+      $captureImageContainer.classList.remove('show');
+    }
+
+    function resetCaptureState() {
+      $captureBtn.classList.remove('loading');
+      $captureBtn.disabled = false;
+      $captureBtn.textContent = 'Capture';
+      $captureImageContainer.classList.remove('show');
+      $captureError.classList.remove('show');
+      $captureImage.src = '';
+    }
+
+    function openFullscreen() {
+      if (!$captureImage.src || !$captureImage.src.startsWith('data:')) return;
+      $fullscreenImage.src = $captureImage.src;
+      $fullscreenOverlay.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeFullscreen() {
+      $fullscreenOverlay.classList.remove('show');
+      // Only restore overflow if modal is not open
+      if (!$modal.classList.contains('show')) {
+        document.body.style.overflow = '';
+      }
+    }
+
+    // Fullscreen event handlers
+    $captureImage.addEventListener('click', openFullscreen);
+    $fullscreenClose.addEventListener('click', closeFullscreen);
+    $fullscreenOverlay.addEventListener('click', (e) => {
+      if (e.target === $fullscreenOverlay) closeFullscreen();
+    });
+
+    function setDpadEnabled(enabled) {
+      $dpadUp.disabled = !enabled;
+      $dpadDown.disabled = !enabled;
+      $dpadLeft.disabled = !enabled;
+      $dpadRight.disabled = !enabled;
+      $dpadEnter.disabled = !enabled;
     }
 
     $msgInput.addEventListener('input', () => {
@@ -1243,6 +1690,12 @@
             }
           } else if (msg.type === 'clearSessionsResult') {
             if (!msg.success) toast(msg.error || 'Failed', 'err');
+          } else if (msg.type === 'sendKeystrokeResult') {
+            if (!msg.success) toast(msg.error || 'Keystroke failed', 'err');
+          } else if (msg.type === 'screenCapture') {
+            handleScreenCapture(msg.data);
+          } else if (msg.type === 'screenCaptureError') {
+            handleScreenCaptureError(msg.message);
           }
         } catch {}
       };
