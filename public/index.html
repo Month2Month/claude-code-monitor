@@ -442,6 +442,7 @@
       box-shadow: 0 -4px 30px rgba(0, 0, 0, 0.5);
       display: flex;
       flex-direction: column;
+      overflow-y: auto;
     }
 
     .modal-bg.show .modal {
@@ -873,12 +874,12 @@
 
     /* Screen Capture */
     .capture-section {
-      flex-shrink: 1;
-      min-height: 0;
+      flex-shrink: 0;
+      min-height: auto;
       padding: 16px 20px;
       border-top: 1px solid var(--border-subtle);
       display: none;
-      overflow: hidden;
+      overflow: visible;
     }
 
     .capture-section.show {
