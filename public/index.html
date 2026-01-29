@@ -1187,6 +1187,16 @@
       <div class="modal-waiting-notice" id="modalWaitingNotice" style="display: none;">
         <div class="modal-waiting-notice-text">Permission required. Please respond on PC.</div>
       </div>
+      <div class="capture-section" id="captureSection">
+        <div class="capture-header">
+          <span class="capture-label">Screen Capture</span>
+          <button class="capture-btn" id="captureBtn" onclick="captureScreen()">Capture</button>
+        </div>
+        <div class="capture-image-container" id="captureImageContainer">
+          <img class="capture-image" id="captureImage" alt="Terminal screenshot" />
+        </div>
+        <div class="capture-error" id="captureError"></div>
+      </div>
       <div class="dpad-section" id="dpadSection">
         <div class="dpad-label">Direction Keys</div>
         <div class="dpad-container">
@@ -1199,16 +1209,6 @@
           </div>
           <button class="dpad-enter-btn" id="dpadEnter" onclick="sendKeystroke('enter')" aria-label="Enter">Enter</button>
         </div>
-      </div>
-      <div class="capture-section" id="captureSection">
-        <div class="capture-header">
-          <span class="capture-label">Screen Capture</span>
-          <button class="capture-btn" id="captureBtn" onclick="captureScreen()">Capture</button>
-        </div>
-        <div class="capture-image-container" id="captureImageContainer">
-          <img class="capture-image" id="captureImage" alt="Terminal screenshot" />
-        </div>
-        <div class="capture-error" id="captureError"></div>
       </div>
       <div class="modal-input">
         <div class="modal-input-row">
