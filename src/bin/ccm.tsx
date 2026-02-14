@@ -1,13 +1,16 @@
 #!/usr/bin/env node
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
+import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { Command } from 'commander';
 import { render } from 'ink';
 import { Dashboard } from '../components/Dashboard.js';
 import { handleHookEvent } from '../hook/handler.js';
+import { buildMenubarApp, getPidFilePath } from '../menubar/build.js';
 import { startServer } from '../server/index.js';
 import { isHooksConfigured, promptGhosttySettingIfNeeded, setupHooks } from '../setup/index.js';
 import { clearSessions, getSessions } from '../store/file-store.js';
+import { focusSession } from '../utils/focus.js';
 import { getStatusDisplay } from '../utils/status.js';
 
 const require = createRequire(import.meta.url);
@@ -157,6 +160,86 @@ program
   .action(async (options: { port: string; tailscale?: boolean }) => {
     const port = parseInt(options.port, 10);
     await startServer({ port, preferTailscale: options.tailscale });
+  });
+
+program
+  .command('focus <tty>')
+  .description('Focus the terminal window for a given TTY')
+  .action((tty: string) => {
+    const success = focusSession(tty);
+    if (!success) {
+      console.error(`Failed to focus TTY: ${tty}`);
+      process.exit(1);
+    }
+  });
+
+program
+  .command('menubar')
+  .alias('m')
+  .description('Launch the macOS menu bar monitor')
+  .action(() => {
+    const pidFile = getPidFilePath();
+
+    // Check for existing instance
+    if (existsSync(pidFile)) {
+      try {
+        const pid = parseInt(readFileSync(pidFile, 'utf-8').trim(), 10);
+        // Check if process is still running
+        process.kill(pid, 0);
+        console.log(`Menu bar app is already running (PID: ${pid})`);
+        return;
+      } catch {
+        // Process not running, clean up stale PID file
+        unlinkSync(pidFile);
+      }
+    }
+
+    // Build the Swift binary
+    console.log('Building menu bar app...');
+    const result = buildMenubarApp();
+    if (!result.success || !result.binaryPath) {
+      console.error(result.error ?? 'Build failed');
+      process.exit(1);
+    }
+    console.log('Build successful.');
+
+    // Launch detached
+    const child = spawn(result.binaryPath, [], {
+      detached: true,
+      stdio: 'ignore',
+    });
+    child.unref();
+
+    if (child.pid) {
+      writeFileSync(pidFile, String(child.pid), { encoding: 'utf-8', mode: 0o600 });
+      console.log(`Menu bar app launched (PID: ${child.pid})`);
+    }
+  });
+
+program
+  .command('menubar-stop')
+  .description('Stop the macOS menu bar monitor')
+  .action(() => {
+    const pidFile = getPidFilePath();
+
+    if (!existsSync(pidFile)) {
+      console.log('Menu bar app is not running');
+      return;
+    }
+
+    try {
+      const pid = parseInt(readFileSync(pidFile, 'utf-8').trim(), 10);
+      process.kill(pid, 'SIGTERM');
+      console.log(`Menu bar app stopped (PID: ${pid})`);
+    } catch {
+      console.log('Menu bar app was not running');
+    }
+
+    try {
+      unlinkSync(pidFile);
+    } catch {
+      // Ignore cleanup errors
+    }
   });
 
 /**

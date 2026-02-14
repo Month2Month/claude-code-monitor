@@ -17,6 +17,7 @@
   "files": [
     "dist",
     "public",
+    "src/menubar/menubar.swift",
     "README.md",
     "LICENSE",
     "CHANGELOG.md"
