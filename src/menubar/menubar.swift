@@ -31,7 +31,9 @@ func isTtyAlive(_ tty: String?) -> Bool {
 class MenuBarController: NSObject {
     private var statusItem: NSStatusItem!
     private var fileDescriptor: Int32 = -1
-    private var dispatchSource: DispatchSourceFileSystemObject?
+    private var dirDescriptor: Int32 = -1
+    private var fileSource: DispatchSourceFileSystemObject?
+    private var dirSource: DispatchSourceFileSystemObject?
     private var pollTimer: Timer?
     private let sessionsPath: String
     private let ccmPath: String
@@ -69,33 +71,71 @@ class MenuBarController: NSObject {
     // MARK: - File Watching
 
     private func startWatching() {
-        // Ensure directory exists
         let dir = (sessionsPath as NSString).deletingLastPathComponent
         try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
 
-        // Create file if it doesn't exist
         if !FileManager.default.fileExists(atPath: sessionsPath) {
             FileManager.default.createFile(atPath: sessionsPath, contents: "{}".data(using: .utf8))
         }
 
-        // Watch the directory (more reliable than watching the file directly for atomic writes)
+        // Watch the file itself for in-place content changes
+        watchFile()
+
+        // Watch the directory for file creation/deletion (handles file recreation)
         let dirFd = open(dir, O_EVTONLY)
         guard dirFd >= 0 else { return }
+        dirDescriptor = dirFd
 
-        fileDescriptor = dirFd
         let source = DispatchSource.makeFileSystemObjectSource(
             fileDescriptor: dirFd,
             eventMask: .write,
             queue: .main
         )
         source.setEventHandler { [weak self] in
+            // File may have been recreated; re-open file watcher
+            self?.watchFile()
             self?.refreshFromFile()
         }
         source.setCancelHandler {
             close(dirFd)
         }
         source.resume()
-        dispatchSource = source
+        dirSource = source
+    }
+
+    private func watchFile() {
+        // Cancel previous file watcher if any
+        fileSource?.cancel()
+        fileSource = nil
+        if fileDescriptor >= 0 {
+            close(fileDescriptor)
+            fileDescriptor = -1
+        }
+
+        let fd = open(sessionsPath, O_EVTONLY)
+        guard fd >= 0 else { return }
+        fileDescriptor = fd
+
+        let source = DispatchSource.makeFileSystemObjectSource(
+            fileDescriptor: fd,
+            eventMask: [.write, .delete, .rename],
+            queue: .main
+        )
+        source.setEventHandler { [weak self] in
+            guard let self = self else { return }
+            let flags = source.data
+            self.refreshFromFile()
+
+            // If file was deleted or renamed, re-open watcher
+            if flags.contains(.delete) || flags.contains(.rename) {
+                self.watchFile()
+            }
+        }
+        source.setCancelHandler {
+            close(fd)
+        }
+        source.resume()
+        fileSource = source
     }
 
     private func refreshFromFile() {
@@ -210,7 +250,8 @@ class MenuBarController: NSObject {
 
     @objc private func quitApp() {
         // Clean up
-        dispatchSource?.cancel()
+        fileSource?.cancel()
+        dirSource?.cancel()
         pollTimer?.invalidate()
         NSApplication.shared.terminate(nil)
     }

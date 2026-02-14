@@ -24,13 +24,13 @@ Control from your phone (same Wi-Fi or Tailscale)
 
 ## ✨ Features
 
-| Terminal (TUI) | Mobile Web |
-|----------------|------------|
-| Real-time session monitoring | Monitor from your smartphone |
-| Quick tab focus with keyboard | Remote terminal focus |
-| Vim-style navigation | Send messages to terminal |
-| Simple status display | Permission prompt navigation |
-| | Screen capture with pinch zoom |
+| Terminal (TUI) | Mobile Web | Menu Bar |
+|----------------|------------|----------|
+| Real-time session monitoring | Monitor from your smartphone | Glanceable status in macOS menu bar |
+| Quick tab focus with keyboard | Remote terminal focus | Click to focus terminal |
+| Vim-style navigation | Send messages to terminal | No screen space required |
+| Simple status display | Permission prompt navigation | Auto-updates on session changes |
+| | Screen capture with pinch zoom | |
 
 - 🔌 **Serverless** - File-based state management, no API server required
 - ⚡ **Easy Setup** - One command `ccm` for automatic setup and launch
@@ -45,6 +45,7 @@ Control from your phone (same Wi-Fi or Tailscale)
 - **macOS**
 - **Node.js** >= 18.0.0
 - **Claude Code** installed
+- **Xcode Command Line Tools** (for menu bar feature only - `xcode-select --install`)
 
 ---
 
@@ -103,9 +104,12 @@ With `-t` option, the QR code URL uses your Tailscale IP (100.x.x.x), allowing a
 |---------|-------|-------------|
 | `ccm` | - | Launch monitor (auto-setup if needed) |
 | `ccm watch` | `ccm w` | Launch monitor |
+| `ccm menubar` | `ccm m` | Launch macOS menu bar monitor |
+| `ccm menubar-stop` | - | Stop the menu bar monitor |
 | `ccm serve` | `ccm s` | Start mobile web server only |
 | `ccm setup` | - | Configure Claude Code hooks |
 | `ccm list` | `ccm ls` | List sessions |
+| `ccm focus <tty>` | - | Focus terminal window by TTY path |
 | `ccm clear` | - | Clear all sessions |
 
 ### Options
@@ -168,6 +172,47 @@ Monitor and control Claude Code sessions from your smartphone.
 - Office/Work Wi-Fi
 
 > **Warning**: Avoid using on public Wi-Fi networks (cafes, airports, etc.). Other users on the same network could potentially access your monitor.
+
+---
+
+## 🖥️ Menu Bar Monitor
+
+A native macOS menu bar item that shows session status at a glance without taking up any screen space.
+
+### Launch
+
+```bash
+ccm menubar
+# Or with alias
+ccm m
+```
+
+On first run, the Swift source is compiled and cached. Subsequent launches are instant (recompiles only when the source changes).
+
+### Display
+
+| State | Menu Bar |
+|-------|----------|
+| No sessions | `CCM` |
+| 2 running, 1 waiting | `● 2  ◐ 1` |
+| 1 running, 1 waiting, 3 stopped | `● 1  ◐ 1  ✓ 3` |
+
+Zero-count statuses are omitted to keep the display compact.
+
+### Dropdown Menu
+
+Click the menu bar item to see individual sessions. Click a session to focus its terminal window.
+
+### Stop
+
+```bash
+ccm menubar-stop
+```
+
+### Requirements
+
+- Xcode Command Line Tools (`swiftc` must be available)
+- If not installed: `xcode-select --install`
 
 ---
 
