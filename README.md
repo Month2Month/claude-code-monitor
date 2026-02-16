@@ -4,6 +4,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![macOS](https://img.shields.io/badge/platform-macOS-lightgrey.svg)](https://www.apple.com/macos/)
 
+> **Fork**: This is a fork of [onikan27/claude-code-monitor](https://github.com/onikan27/claude-code-monitor) with bug fixes and additional features.
+
 **Monitor multiple Claude Code sessions in real-time from your terminal or smartphone.**
 
 ### Terminal UI
@@ -368,7 +370,7 @@ This is an unofficial community tool and is not affiliated with Anthropic.
 
 ## 🐛 Issues
 
-Found a bug? [Open an issue](https://github.com/onikan27/claude-code-monitor/issues)
+Found a bug? [Open an issue](https://github.com/m2m/claude-code-monitor/issues)
 
 ---
 
