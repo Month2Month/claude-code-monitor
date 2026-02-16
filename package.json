@@ -49,12 +49,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/m2m/claude-code-monitor.git"
+    "url": "git+https://github.com/Month2Month/claude-code-monitor.git"
   },
   "bugs": {
-    "url": "https://github.com/m2m/claude-code-monitor/issues"
+    "url": "https://github.com/Month2Month/claude-code-monitor/issues"
   },
-  "homepage": "https://github.com/m2m/claude-code-monitor#readme",
+  "homepage": "https://github.com/Month2Month/claude-code-monitor#readme",
   "engines": {
     "node": ">=18.0.0"
   },

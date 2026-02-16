@@ -370,7 +370,7 @@ This is an unofficial community tool and is not affiliated with Anthropic.
 
 ## 🐛 Issues
 
-Found a bug? [Open an issue](https://github.com/m2m/claude-code-monitor/issues)
+Found a bug? [Open an issue](https://github.com/Month2Month/claude-code-monitor/issues)
 
 ---
 
