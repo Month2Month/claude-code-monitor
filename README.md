@@ -118,6 +118,7 @@ With `-t` option, the QR code URL uses your Tailscale IP (100.x.x.x), allowing a
 |--------|-------------|
 | `--qr` | Show QR code on startup |
 | `-t, --tailscale` | Prefer Tailscale IP for mobile access |
+| `--menubar` | Also launch menu bar monitor (with `ccm` or `ccm watch`) |
 | `-p, --port <port>` | Specify port (serve command only) |
 
 ### Keybindings
@@ -185,6 +186,14 @@ A native macOS menu bar item that shows session status at a glance without takin
 ccm menubar
 # Or with alias
 ccm m
+```
+
+To run the terminal UI and menu bar together:
+
+```bash
+ccm --menubar
+# Or
+ccm watch --menubar
 ```
 
 On first run, the Swift source is compiled and cached. Subsequent launches are instant (recompiles only when the source changes).
