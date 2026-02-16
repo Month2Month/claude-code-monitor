@@ -4,7 +4,16 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![macOS](https://img.shields.io/badge/platform-macOS-lightgrey.svg)](https://www.apple.com/macos/)
 
-> **Fork**: This is a fork of [onikan27/claude-code-monitor](https://github.com/onikan27/claude-code-monitor) with bug fixes and additional features.
+> **Fork**: This is a fork of [onikan27/claude-code-monitor](https://github.com/onikan27/claude-code-monitor) (v1.3.1) with bug fixes and additional features.
+
+### What's new in this fork
+
+- **macOS Menu Bar Monitor** — Native Swift menu bar app (`ccm menubar`) shows session status at a glance without taking up screen space. Click sessions to focus their terminal.
+- **Auto-Start Menu Bar** — Menu bar app launches automatically on hook events. No manual setup needed — just use Claude Code as usual.
+- **Task Title Display** — Extracts the first user message from JSONL transcripts and displays it alongside the directory path in all UIs (TUI, menu bar, mobile web) for easier session identification.
+- **Open Dashboard from Menu Bar** — "Open Dashboard..." menu item launches `ccm watch` in a new terminal window (iTerm2 or Terminal.app).
+- **Notification Hook Fix** — Removed empty `matcher` field from the Notification hook so permission prompts are properly detected.
+- **GitHub Actions** — Added Claude PR assistant and automated code review workflows.
 
 **Monitor multiple Claude Code sessions in real-time from your terminal or smartphone.**
 
