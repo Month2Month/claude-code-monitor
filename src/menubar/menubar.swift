@@ -264,7 +264,10 @@ class MenuBarController: NSObject {
             let script = """
             tell application "iTerm2"
                 activate
-                set newWindow to (create window with default profile command "\(ccmPath) watch")
+                create window with default profile
+                tell current session of current window
+                    write text "\(ccmPath) watch"
+                end tell
             end tell
             """
             let appleScript = NSAppleScript(source: script)

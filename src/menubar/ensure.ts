@@ -27,7 +27,9 @@ export function ensureMenubar(): boolean {
     return false;
   }
 
-  const child = spawn(result.binaryPath, [], {
+  // Pass the ccm binary path so the Swift app can use it for "Open Dashboard"
+  const ccmBin = process.argv[1] ?? 'ccm';
+  const child = spawn(result.binaryPath, [ccmBin], {
     detached: true,
     stdio: 'ignore',
   });

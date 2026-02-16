@@ -31,8 +31,8 @@ Control from your phone (same Wi-Fi or Tailscale)
 | Real-time session monitoring | Monitor from your smartphone | Glanceable status in macOS menu bar |
 | Quick tab focus with keyboard | Remote terminal focus | Click to focus terminal |
 | Vim-style navigation | Send messages to terminal | No screen space required |
-| Simple status display | Permission prompt navigation | Auto-updates on session changes |
-| | Screen capture with pinch zoom | |
+| Simple status display | Permission prompt navigation | Auto-starts on hook events |
+| | Screen capture with pinch zoom | Open Dashboard from menu |
 
 - 🔌 **Serverless** - File-based state management, no API server required
 - ⚡ **Easy Setup** - One command `ccm` for automatic setup and launch
@@ -182,7 +182,13 @@ Monitor and control Claude Code sessions from your smartphone.
 
 A native macOS menu bar item that shows session status at a glance without taking up any screen space.
 
-### Launch
+### Auto-Start
+
+The menu bar app **automatically starts** whenever Claude Code fires a hook event (e.g., when a session begins). No manual launch required — just use Claude Code as usual and the menu bar icon will appear.
+
+### Manual Launch
+
+You can also start it manually:
 
 ```bash
 ccm menubar
@@ -212,7 +218,10 @@ Zero-count statuses are omitted to keep the display compact.
 
 ### Dropdown Menu
 
-Click the menu bar item to see individual sessions. Click a session to focus its terminal window.
+Click the menu bar item to see individual sessions:
+
+- **Open Dashboard...** — Opens the terminal UI (`ccm watch`) in a new terminal window (iTerm2 or Terminal.app)
+- **Session items** — Click a session to focus its terminal window
 
 ### Stop
 
