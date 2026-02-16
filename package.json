@@ -17,6 +17,7 @@
   "files": [
     "dist",
     "public",
+    "src/menubar/menubar.swift",
     "README.md",
     "LICENSE",
     "CHANGELOG.md"
@@ -44,16 +45,16 @@
     "terminal",
     "session"
   ],
-  "author": "onikan27",
+  "author": "M2M",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/onikan27/claude-code-monitor.git"
+    "url": "git+https://github.com/Month2Month/claude-code-monitor.git"
   },
   "bugs": {
-    "url": "https://github.com/onikan27/claude-code-monitor/issues"
+    "url": "https://github.com/Month2Month/claude-code-monitor/issues"
   },
-  "homepage": "https://github.com/onikan27/claude-code-monitor#readme",
+  "homepage": "https://github.com/Month2Month/claude-code-monitor#readme",
   "engines": {
     "node": ">=18.0.0"
   },

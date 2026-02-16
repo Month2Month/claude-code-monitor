@@ -4,6 +4,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![macOS](https://img.shields.io/badge/platform-macOS-lightgrey.svg)](https://www.apple.com/macos/)
 
+> **Fork**: This is a fork of [onikan27/claude-code-monitor](https://github.com/onikan27/claude-code-monitor) with bug fixes and additional features.
+
 **Monitor multiple Claude Code sessions in real-time from your terminal or smartphone.**
 
 ### Terminal UI
@@ -24,13 +26,13 @@ Control from your phone (same Wi-Fi or Tailscale)
 
 ## ✨ Features
 
-| Terminal (TUI) | Mobile Web |
-|----------------|------------|
-| Real-time session monitoring | Monitor from your smartphone |
-| Quick tab focus with keyboard | Remote terminal focus |
-| Vim-style navigation | Send messages to terminal |
-| Simple status display | Permission prompt navigation |
-| | Screen capture with pinch zoom |
+| Terminal (TUI) | Mobile Web | Menu Bar |
+|----------------|------------|----------|
+| Real-time session monitoring | Monitor from your smartphone | Glanceable status in macOS menu bar |
+| Quick tab focus with keyboard | Remote terminal focus | Click to focus terminal |
+| Vim-style navigation | Send messages to terminal | No screen space required |
+| Simple status display | Permission prompt navigation | Auto-updates on session changes |
+| | Screen capture with pinch zoom | |
 
 - 🔌 **Serverless** - File-based state management, no API server required
 - ⚡ **Easy Setup** - One command `ccm` for automatic setup and launch
@@ -45,6 +47,7 @@ Control from your phone (same Wi-Fi or Tailscale)
 - **macOS**
 - **Node.js** >= 18.0.0
 - **Claude Code** installed
+- **Xcode Command Line Tools** (for menu bar feature only - `xcode-select --install`)
 
 ---
 
@@ -103,9 +106,12 @@ With `-t` option, the QR code URL uses your Tailscale IP (100.x.x.x), allowing a
 |---------|-------|-------------|
 | `ccm` | - | Launch monitor (auto-setup if needed) |
 | `ccm watch` | `ccm w` | Launch monitor |
+| `ccm menubar` | `ccm m` | Launch macOS menu bar monitor |
+| `ccm menubar-stop` | - | Stop the menu bar monitor |
 | `ccm serve` | `ccm s` | Start mobile web server only |
 | `ccm setup` | - | Configure Claude Code hooks |
 | `ccm list` | `ccm ls` | List sessions |
+| `ccm focus <tty>` | - | Focus terminal window by TTY path |
 | `ccm clear` | - | Clear all sessions |
 
 ### Options
@@ -114,6 +120,7 @@ With `-t` option, the QR code URL uses your Tailscale IP (100.x.x.x), allowing a
 |--------|-------------|
 | `--qr` | Show QR code on startup |
 | `-t, --tailscale` | Prefer Tailscale IP for mobile access |
+| `--menubar` | Also launch menu bar monitor (with `ccm` or `ccm watch`) |
 | `-p, --port <port>` | Specify port (serve command only) |
 
 ### Keybindings
@@ -171,6 +178,55 @@ Monitor and control Claude Code sessions from your smartphone.
 
 ---
 
+## 🖥️ Menu Bar Monitor
+
+A native macOS menu bar item that shows session status at a glance without taking up any screen space.
+
+### Launch
+
+```bash
+ccm menubar
+# Or with alias
+ccm m
+```
+
+To run the terminal UI and menu bar together:
+
+```bash
+ccm --menubar
+# Or
+ccm watch --menubar
+```
+
+On first run, the Swift source is compiled and cached. Subsequent launches are instant (recompiles only when the source changes).
+
+### Display
+
+| State | Menu Bar |
+|-------|----------|
+| No sessions | `CCM` |
+| 2 running, 1 waiting | `● 2  ◐ 1` |
+| 1 running, 1 waiting, 3 stopped | `● 1  ◐ 1  ✓ 3` |
+
+Zero-count statuses are omitted to keep the display compact.
+
+### Dropdown Menu
+
+Click the menu bar item to see individual sessions. Click a session to focus its terminal window.
+
+### Stop
+
+```bash
+ccm menubar-stop
+```
+
+### Requirements
+
+- Xcode Command Line Tools (`swiftc` must be available)
+- If not installed: `xcode-select --install`
+
+---
+
 ## 🖥️ Supported Terminals
 
 | Terminal | Focus Support | Notes |
@@ -202,11 +258,54 @@ If you skipped this during setup and want to enable it later, add the setting ma
 
 ## 🔧 Troubleshooting
 
+### `ccm` command not found
+
+If hooks are configured but sessions don't appear, the `ccm` command may not be installed or on your PATH. Verify with:
+
+```bash
+which ccm
+```
+
+To fix, install globally:
+
+```bash
+npm install -g claude-code-monitor
+```
+
+Or if developing locally, build and link:
+
+```bash
+npm install && npm run build && npm link
+```
+
 ### Sessions not showing
 
 1. Run `ccm setup` to verify hook configuration
 2. Check `~/.claude/settings.json` for hook settings
 3. Restart Claude Code
+
+### "Waiting for input" status not appearing
+
+If the monitor doesn't show the waiting/permission prompt status, check the Notification hook in `~/.claude/settings.json`. It should **not** have a `"matcher"` field:
+
+```json
+// ✅ Correct — matches all notification types including permission_prompt
+"Notification": [
+  {
+    "hooks": [{ "type": "command", "command": "ccm hook Notification" }]
+  }
+]
+
+// ❌ Wrong — empty matcher prevents permission_prompt from being detected
+"Notification": [
+  {
+    "hooks": [{ "type": "command", "command": "ccm hook Notification" }],
+    "matcher": ""
+  }
+]
+```
+
+If your config has `"matcher": ""` on the Notification hook, remove it and restart Claude Code. Running `ccm setup` with v1.3.2+ will configure this correctly.
 
 ### Focus not working
 
@@ -271,7 +370,7 @@ This is an unofficial community tool and is not affiliated with Anthropic.
 
 ## 🐛 Issues
 
-Found a bug? [Open an issue](https://github.com/onikan27/claude-code-monitor/issues)
+Found a bug? [Open an issue](https://github.com/Month2Month/claude-code-monitor/issues)
 
 ---
 

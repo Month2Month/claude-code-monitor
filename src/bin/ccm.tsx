@@ -1,13 +1,16 @@
 #!/usr/bin/env node
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
+import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { Command } from 'commander';
 import { render } from 'ink';
 import { Dashboard } from '../components/Dashboard.js';
 import { handleHookEvent } from '../hook/handler.js';
+import { buildMenubarApp, getPidFilePath } from '../menubar/build.js';
 import { startServer } from '../server/index.js';
 import { isHooksConfigured, promptGhosttySettingIfNeeded, setupHooks } from '../setup/index.js';
 import { clearSessions, getSessions } from '../store/file-store.js';
+import { focusSession } from '../utils/focus.js';
 import { getStatusDisplay } from '../utils/status.js';
 
 const require = createRequire(import.meta.url);
@@ -50,6 +53,44 @@ function getTtyFromAncestors(): string | undefined {
 interface DashboardOptions {
   qr?: boolean;
   preferTailscale?: boolean;
+  menubar?: boolean;
+}
+
+/**
+ * Launch the menu bar app if not already running.
+ * Returns true if launched or already running.
+ */
+function ensureMenubar(): boolean {
+  const pidFile = getPidFilePath();
+
+  // Check for existing instance
+  if (existsSync(pidFile)) {
+    try {
+      const pid = parseInt(readFileSync(pidFile, 'utf-8').trim(), 10);
+      process.kill(pid, 0);
+      // Already running
+      return true;
+    } catch {
+      unlinkSync(pidFile);
+    }
+  }
+
+  const result = buildMenubarApp();
+  if (!result.success || !result.binaryPath) {
+    console.error(`Menu bar: ${result.error ?? 'Build failed'}`);
+    return false;
+  }
+
+  const child = spawn(result.binaryPath, [], {
+    detached: true,
+    stdio: 'ignore',
+  });
+  child.unref();
+
+  if (child.pid) {
+    writeFileSync(pidFile, String(child.pid), { encoding: 'utf-8', mode: 0o600 });
+  }
+  return true;
 }
 
 /**
@@ -91,7 +132,8 @@ program
   .description('Claude Code Monitor - CLI-based session monitoring')
   .version(pkg.version)
   .option('--qr', 'Show QR code for mobile access')
-  .option('-t, --tailscale', 'Prefer Tailscale IP for mobile access');
+  .option('-t, --tailscale', 'Prefer Tailscale IP for mobile access')
+  .option('--menubar', 'Also launch menu bar monitor');
 
 program
   .command('watch')
@@ -99,7 +141,11 @@ program
   .description('Start the monitoring TUI')
   .option('--qr', 'Show QR code for mobile access')
   .option('-t, --tailscale', 'Prefer Tailscale IP for mobile access')
-  .action(async (options: { qr?: boolean; tailscale?: boolean }) => {
+  .option('--menubar', 'Also launch menu bar monitor')
+  .action(async (options: { qr?: boolean; tailscale?: boolean; menubar?: boolean }) => {
+    if (options.menubar) {
+      ensureMenubar();
+    }
     await runWithAltScreen({ qr: options.qr, preferTailscale: options.tailscale });
   });
 
@@ -159,6 +205,70 @@ program
     await startServer({ port, preferTailscale: options.tailscale });
   });
 
+program
+  .command('focus <tty>')
+  .description('Focus the terminal window for a given TTY')
+  .action((tty: string) => {
+    const success = focusSession(tty);
+    if (!success) {
+      console.error(`Failed to focus TTY: ${tty}`);
+      process.exit(1);
+    }
+  });
+
+program
+  .command('menubar')
+  .alias('m')
+  .description('Launch the macOS menu bar monitor')
+  .action(() => {
+    const pidFile = getPidFilePath();
+
+    // Check for existing instance
+    if (existsSync(pidFile)) {
+      try {
+        const pid = parseInt(readFileSync(pidFile, 'utf-8').trim(), 10);
+        process.kill(pid, 0);
+        console.log(`Menu bar app is already running (PID: ${pid})`);
+        return;
+      } catch {
+        unlinkSync(pidFile);
+      }
+    }
+
+    console.log('Building menu bar app...');
+    if (ensureMenubar()) {
+      console.log('Menu bar app launched.');
+    } else {
+      process.exit(1);
+    }
+  });
+
+program
+  .command('menubar-stop')
+  .description('Stop the macOS menu bar monitor')
+  .action(() => {
+    const pidFile = getPidFilePath();
+
+    if (!existsSync(pidFile)) {
+      console.log('Menu bar app is not running');
+      return;
+    }
+
+    try {
+      const pid = parseInt(readFileSync(pidFile, 'utf-8').trim(), 10);
+      process.kill(pid, 'SIGTERM');
+      console.log(`Menu bar app stopped (PID: ${pid})`);
+    } catch {
+      console.log('Menu bar app was not running');
+    }
+
+    try {
+      unlinkSync(pidFile);
+    } catch {
+      // Ignore cleanup errors
+    }
+  });
+
 /**
  * Default action (when launched without arguments or with --qr only)
  * - Run setup if not configured
@@ -180,14 +290,23 @@ async function defaultAction(options: DashboardOptions = {}) {
     await promptGhosttySettingIfNeeded();
   }
 
+  // Launch menu bar if requested
+  if (options.menubar) {
+    ensureMenubar();
+  }
+
   // Launch monitor
   await runWithAltScreen(options);
 }
 
 // Handle default action (no subcommand)
 program.action(async () => {
-  const options = program.opts<{ qr?: boolean; tailscale?: boolean }>();
-  await defaultAction({ qr: options.qr, preferTailscale: options.tailscale });
+  const options = program.opts<{ qr?: boolean; tailscale?: boolean; menubar?: boolean }>();
+  await defaultAction({
+    qr: options.qr,
+    preferTailscale: options.tailscale,
+    menubar: options.menubar,
+  });
 });
 
 program.parse();

@@ -54,6 +54,8 @@ Claude Codeの複数セッションをリアルタイム監視するmacOS専用C
 - `src/store/file-store.ts` - セッション状態の永続化（JSON読み書き、TTY生存確認）
 - `src/setup/index.ts` - `~/.claude/settings.json` へのフック自動設定
 - `src/server/index.ts` - HTTP + WebSocketサーバー（モバイルWeb用）
+- `src/menubar/menubar.swift` - macOSメニューバーアプリ（Swiftネイティブ、NSStatusItem）
+- `src/menubar/build.ts` - Swiftバイナリのコンパイルとキャッシュ管理
 - `src/components/` - InkベースのReactコンポーネント（Dashboard, SessionCard, Spinner）
 - `src/hooks/useSessions.ts` - ファイル変更監視付きのReactフック
 - `src/hooks/useServer.ts` - モバイルサーバー起動用フック
@@ -70,6 +72,7 @@ Claude Codeの複数セッションをリアルタイム監視するmacOS専用C
 - **WebSocket**: ws
 - **QRコード生成**: qrcode-terminal
 - **ターミナル制御**: AppleScript（iTerm2, Terminal.app, Ghostty対応）
+- **メニューバー**: Swift（NSStatusItem + GCDファイル監視）
 - **テスト**: Vitest
 - **リント/フォーマット**: Biome
 
@@ -91,6 +94,16 @@ Claude Codeの複数セッションをリアルタイム監視するmacOS専用C
 - HTTPサーバー: `public/index.html`を配信（デフォルトポート3456）
 - WebSocket: セッション更新のリアルタイム同期、フォーカスコマンドの受信
 - `ccm serve`で単独のWebサーバーモードとしても起動可能
+
+### メニューバーモニター
+
+`ccm menubar`でネイティブSwiftメニューバーアプリを起動。ターミナルウィンドウを占有せずにセッション状態を常時表示。
+
+- **ビルド**: `src/menubar/menubar.swift`を`swiftc`でコンパイル、`~/.claude-monitor/menubar-app`にキャッシュ
+- **キャッシュ**: ソースのSHA-256ハッシュで変更検知、変更時のみ再コンパイル
+- **ファイル監視**: GCD `DispatchSource`で`sessions.json`のファイル変更を直接監視（in-place書き込み対応）+ ディレクトリ監視（ファイル再作成対応）
+- **フォールバック**: 60秒ごとのポーリング（TTY消失の検出用）
+- **PID管理**: `~/.claude-monitor/menubar-app.pid`で重複起動を防止
 
 ### ライブラリとしての使用
 
