@@ -256,11 +256,54 @@ If you skipped this during setup and want to enable it later, add the setting ma
 
 ## 🔧 Troubleshooting
 
+### `ccm` command not found
+
+If hooks are configured but sessions don't appear, the `ccm` command may not be installed or on your PATH. Verify with:
+
+```bash
+which ccm
+```
+
+To fix, install globally:
+
+```bash
+npm install -g claude-code-monitor
+```
+
+Or if developing locally, build and link:
+
+```bash
+npm install && npm run build && npm link
+```
+
 ### Sessions not showing
 
 1. Run `ccm setup` to verify hook configuration
 2. Check `~/.claude/settings.json` for hook settings
 3. Restart Claude Code
+
+### "Waiting for input" status not appearing
+
+If the monitor doesn't show the waiting/permission prompt status, check the Notification hook in `~/.claude/settings.json`. It should **not** have a `"matcher"` field:
+
+```json
+// ✅ Correct — matches all notification types including permission_prompt
+"Notification": [
+  {
+    "hooks": [{ "type": "command", "command": "ccm hook Notification" }]
+  }
+]
+
+// ❌ Wrong — empty matcher prevents permission_prompt from being detected
+"Notification": [
+  {
+    "hooks": [{ "type": "command", "command": "ccm hook Notification" }],
+    "matcher": ""
+  }
+]
+```
+
+If your config has `"matcher": ""` on the Notification hook, remove it and restart Claude Code. Running `ccm setup` with v1.3.2+ will configure this correctly.
 
 ### Focus not working
 

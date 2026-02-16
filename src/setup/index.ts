@@ -116,8 +116,10 @@ function createHookEntry(eventName: string, baseCommand: string): HookEntry {
       },
     ],
   };
-  // Events other than UserPromptSubmit require a matcher
-  if (eventName !== 'UserPromptSubmit') {
+  // PreToolUse, PostToolUse, and Stop use matcher to filter by tool name.
+  // Empty string matches all tools. UserPromptSubmit and Notification don't
+  // need a matcher — omitting it means all events are matched.
+  if (eventName !== 'UserPromptSubmit' && eventName !== 'Notification') {
     entry.matcher = '';
   }
   return entry;
