@@ -16,6 +16,11 @@ function abbreviateHomePath(path: string | undefined): string {
   return path.replace(/^\/Users\/[^/]+/, '~');
 }
 
+function truncateTitle(title: string, maxLength: number): string {
+  if (title.length <= maxLength) return title;
+  return `${title.slice(0, maxLength - 1)}…`;
+}
+
 export const SessionCard = memo(function SessionCard({
   session,
   index,
@@ -24,6 +29,7 @@ export const SessionCard = memo(function SessionCard({
   const { symbol, color, label } = getStatusDisplay(session.status);
   const dir = abbreviateHomePath(session.cwd);
   const relativeTime = formatRelativeTime(session.updated_at);
+  const taskTitle = session.taskTitle ? truncateTitle(session.taskTitle, 40) : undefined;
 
   return (
     <Box paddingX={1}>
@@ -38,7 +44,14 @@ export const SessionCard = memo(function SessionCard({
       </Box>
       <Text> </Text>
       <Text dimColor>{relativeTime.padEnd(8)}</Text>
-      <Text color={isSelected ? 'white' : 'gray'}>{dir}</Text>
+      {taskTitle ? (
+        <>
+          <Text color={isSelected ? 'white' : undefined}>{taskTitle}</Text>
+          <Text dimColor> → {dir}</Text>
+        </>
+      ) : (
+        <Text color={isSelected ? 'white' : 'gray'}>{dir}</Text>
+      )}
     </Box>
   );
 });

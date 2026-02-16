@@ -3,7 +3,7 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { WRITE_DEBOUNCE_MS } from '../constants.js';
 import type { HookEvent, Session, SessionStatus, StoreData } from '../types/index.js';
-import { getLastAssistantMessage } from '../utils/transcript.js';
+import { getFirstUserMessage, getLastAssistantMessage } from '../utils/transcript.js';
 import { isTtyAlive } from '../utils/tty-cache.js';
 
 // Re-export for backward compatibility
@@ -170,6 +170,12 @@ export function updateSession(event: HookEvent): Session {
     : undefined;
   const lastMessage = assistantMessage ?? existing?.lastMessage;
 
+  // Get task title (first user message) from transcript
+  const userMessage = event.transcript_path
+    ? getFirstUserMessage(event.transcript_path)
+    : undefined;
+  const taskTitle = userMessage ?? existing?.taskTitle;
+
   const session: Session = {
     session_id: event.session_id,
     cwd: event.cwd,
@@ -178,6 +184,7 @@ export function updateSession(event: HookEvent): Session {
     created_at: existing?.created_at ?? now,
     updated_at: now,
     lastMessage,
+    taskTitle,
   };
 
   store.sessions[key] = session;
