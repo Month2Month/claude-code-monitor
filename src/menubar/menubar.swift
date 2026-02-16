@@ -193,6 +193,16 @@ class MenuBarController: NSObject {
     private func buildMenu(sessions: [Session]) {
         let menu = NSMenu()
 
+        // Open Dashboard action
+        let dashboardItem = NSMenuItem(
+            title: "Open Dashboard...",
+            action: #selector(openDashboard),
+            keyEquivalent: "d"
+        )
+        dashboardItem.target = self
+        menu.addItem(dashboardItem)
+        menu.addItem(NSMenuItem.separator())
+
         if sessions.isEmpty {
             let item = NSMenuItem(title: "No active sessions", action: nil, keyEquivalent: "")
             item.isEnabled = false
@@ -246,6 +256,30 @@ class MenuBarController: NSObject {
     }
 
     // MARK: - Actions
+
+    @objc private func openDashboard() {
+        let hasITerm = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.googlecode.iterm2") != nil
+
+        if hasITerm {
+            let script = """
+            tell application "iTerm2"
+                activate
+                set newWindow to (create window with default profile command "\(ccmPath) watch")
+            end tell
+            """
+            let appleScript = NSAppleScript(source: script)
+            appleScript?.executeAndReturnError(nil)
+        } else {
+            let script = """
+            tell application "Terminal"
+                activate
+                do script "\(ccmPath) watch"
+            end tell
+            """
+            let appleScript = NSAppleScript(source: script)
+            appleScript?.executeAndReturnError(nil)
+        }
+    }
 
     @objc private func sessionClicked(_ sender: NSMenuItem) {
         guard let tty = sender.representedObject as? String else { return }

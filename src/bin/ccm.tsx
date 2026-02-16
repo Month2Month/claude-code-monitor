@@ -1,12 +1,13 @@
 #!/usr/bin/env node
-import { execFileSync, spawn } from 'node:child_process';
-import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { existsSync, readFileSync, unlinkSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { Command } from 'commander';
 import { render } from 'ink';
 import { Dashboard } from '../components/Dashboard.js';
 import { handleHookEvent } from '../hook/handler.js';
-import { buildMenubarApp, getPidFilePath } from '../menubar/build.js';
+import { getPidFilePath } from '../menubar/build.js';
+import { ensureMenubar } from '../menubar/ensure.js';
 import { startServer } from '../server/index.js';
 import { isHooksConfigured, promptGhosttySettingIfNeeded, setupHooks } from '../setup/index.js';
 import { clearSessions, getSessions } from '../store/file-store.js';
@@ -54,43 +55,6 @@ interface DashboardOptions {
   qr?: boolean;
   preferTailscale?: boolean;
   menubar?: boolean;
-}
-
-/**
- * Launch the menu bar app if not already running.
- * Returns true if launched or already running.
- */
-function ensureMenubar(): boolean {
-  const pidFile = getPidFilePath();
-
-  // Check for existing instance
-  if (existsSync(pidFile)) {
-    try {
-      const pid = parseInt(readFileSync(pidFile, 'utf-8').trim(), 10);
-      process.kill(pid, 0);
-      // Already running
-      return true;
-    } catch {
-      unlinkSync(pidFile);
-    }
-  }
-
-  const result = buildMenubarApp();
-  if (!result.success || !result.binaryPath) {
-    console.error(`Menu bar: ${result.error ?? 'Build failed'}`);
-    return false;
-  }
-
-  const child = spawn(result.binaryPath, [], {
-    detached: true,
-    stdio: 'ignore',
-  });
-  child.unref();
-
-  if (child.pid) {
-    writeFileSync(pidFile, String(child.pid), { encoding: 'utf-8', mode: 0o600 });
-  }
-  return true;
 }
 
 /**
