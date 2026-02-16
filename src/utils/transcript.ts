@@ -17,6 +17,46 @@ interface ContentBlock {
   text?: string;
 }
 
+const MAX_TASK_TITLE_LENGTH = 50;
+
+/**
+ * Get the first user text message from a transcript file (used as task title).
+ * Truncated to MAX_TASK_TITLE_LENGTH characters.
+ */
+export function getFirstUserMessage(transcriptPath: string): string | undefined {
+  if (!transcriptPath || !existsSync(transcriptPath)) {
+    return undefined;
+  }
+
+  try {
+    const content = readFileSync(transcriptPath, 'utf-8');
+    const lines = content.trim().split('\n').filter(Boolean);
+
+    for (const line of lines) {
+      try {
+        const entry = JSON.parse(line);
+        if (entry.type === 'human' && entry.message?.content) {
+          const contentBlocks = entry.message.content as ContentBlock[];
+          for (const block of contentBlocks) {
+            if (block.type === 'text' && block.text) {
+              const text = block.text.trim();
+              if (text.length === 0) continue;
+              if (text.length <= MAX_TASK_TITLE_LENGTH) return text;
+              return `${text.slice(0, MAX_TASK_TITLE_LENGTH - 1)}…`;
+            }
+          }
+        }
+      } catch {
+        // Skip invalid JSON lines
+      }
+    }
+  } catch {
+    // Ignore file read errors
+  }
+
+  return undefined;
+}
+
 /**
  * Get the last assistant text message from a transcript file.
  */

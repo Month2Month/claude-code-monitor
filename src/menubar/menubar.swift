@@ -11,6 +11,7 @@ struct Session: Decodable {
     let created_at: String
     let updated_at: String
     let lastMessage: String?
+    let taskTitle: String?
 }
 
 struct StoreData: Decodable {
@@ -207,8 +208,17 @@ class MenuBarController: NSObject {
                 }
 
                 let shortCwd = shortenPath(session.cwd)
+                let title: String
+                if let taskTitle = session.taskTitle, !taskTitle.isEmpty {
+                    let truncated = taskTitle.count > 40
+                        ? String(taskTitle.prefix(39)) + "…"
+                        : taskTitle
+                    title = "\(symbol) \(truncated) → \(shortCwd)"
+                } else {
+                    title = "\(symbol) \(shortCwd)"
+                }
                 let item = NSMenuItem(
-                    title: "\(symbol) \(shortCwd)",
+                    title: title,
                     action: #selector(sessionClicked(_:)),
                     keyEquivalent: ""
                 )
