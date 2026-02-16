@@ -27,14 +27,19 @@ describe('transcript', () => {
   });
 
   describe('getFirstUserMessage', () => {
-    it('should return the first user text message', () => {
+    it('should return the first user text message (string content)', () => {
       const path = writeTranscript('test.jsonl', [
-        { type: 'human', message: { content: [{ type: 'text', text: 'Fix the login bug' }] } },
-        {
-          type: 'assistant',
-          message: { content: [{ type: 'text', text: 'I will fix it.' }] },
-        },
-        { type: 'human', message: { content: [{ type: 'text', text: 'Second message' }] } },
+        { type: 'user', message: { content: 'Fix the login bug' } },
+        { type: 'assistant', message: { content: [{ type: 'text', text: 'I will fix it.' }] } },
+        { type: 'user', message: { content: 'Second message' } },
+      ]);
+
+      expect(getFirstUserMessage(path)).toBe('Fix the login bug');
+    });
+
+    it('should return the first user text message (content block array)', () => {
+      const path = writeTranscript('test.jsonl', [
+        { type: 'user', message: { content: [{ type: 'text', text: 'Fix the login bug' }] } },
       ]);
 
       expect(getFirstUserMessage(path)).toBe('Fix the login bug');
@@ -43,7 +48,7 @@ describe('transcript', () => {
     it('should truncate long messages to 50 characters', () => {
       const longMessage = 'A'.repeat(60);
       const path = writeTranscript('test.jsonl', [
-        { type: 'human', message: { content: [{ type: 'text', text: longMessage }] } },
+        { type: 'user', message: { content: longMessage } },
       ]);
 
       const result = getFirstUserMessage(path);
@@ -60,10 +65,23 @@ describe('transcript', () => {
       expect(getFirstUserMessage(path)).toBeUndefined();
     });
 
-    it('should skip empty text blocks', () => {
+    it('should skip system/command XML messages', () => {
       const path = writeTranscript('test.jsonl', [
-        { type: 'human', message: { content: [{ type: 'text', text: '  ' }] } },
-        { type: 'human', message: { content: [{ type: 'text', text: 'Real task' }] } },
+        { type: 'user', message: { content: '<command-name>/clear</command-name>' } },
+        {
+          type: 'user',
+          message: { content: '<local-command-caveat>some caveat</local-command-caveat>' },
+        },
+        { type: 'user', message: { content: 'Real task here' } },
+      ]);
+
+      expect(getFirstUserMessage(path)).toBe('Real task here');
+    });
+
+    it('should skip empty text content', () => {
+      const path = writeTranscript('test.jsonl', [
+        { type: 'user', message: { content: '  ' } },
+        { type: 'user', message: { content: 'Real task' } },
       ]);
 
       expect(getFirstUserMessage(path)).toBe('Real task');
@@ -71,6 +89,15 @@ describe('transcript', () => {
 
     it('should return undefined for empty path', () => {
       expect(getFirstUserMessage('')).toBeUndefined();
+    });
+
+    it('should skip file-history-snapshot entries', () => {
+      const path = writeTranscript('test.jsonl', [
+        { type: 'file-history-snapshot', snapshot: {} },
+        { type: 'user', message: { content: 'My actual task' } },
+      ]);
+
+      expect(getFirstUserMessage(path)).toBe('My actual task');
     });
   });
 
