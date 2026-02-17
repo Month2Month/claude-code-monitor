@@ -4,7 +4,16 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![macOS](https://img.shields.io/badge/platform-macOS-lightgrey.svg)](https://www.apple.com/macos/)
 
-> **Fork**: This is a fork of [onikan27/claude-code-monitor](https://github.com/onikan27/claude-code-monitor) with bug fixes and additional features.
+> **Fork**: This is a fork of [onikan27/claude-code-monitor](https://github.com/onikan27/claude-code-monitor) (v1.3.1) with bug fixes and additional features.
+
+### What's new in this fork
+
+- **macOS Menu Bar Monitor** — Native Swift menu bar app (`ccm menubar`) shows session status at a glance without taking up screen space. Click sessions to focus their terminal.
+- **Auto-Start Menu Bar** — Menu bar app launches automatically on hook events. No manual setup needed — just use Claude Code as usual.
+- **Task Title Display** — Extracts the first user message from JSONL transcripts and displays it alongside the directory path in all UIs (TUI, menu bar, mobile web) for easier session identification.
+- **Open Dashboard from Menu Bar** — "Open Dashboard..." menu item launches `ccm watch` in a new terminal window (iTerm2 or Terminal.app).
+- **Notification Hook Fix** — Removed empty `matcher` field from the Notification hook so permission prompts are properly detected.
+- **GitHub Actions** — Added Claude PR assistant and automated code review workflows.
 
 **Monitor multiple Claude Code sessions in real-time from your terminal or smartphone.**
 
@@ -31,8 +40,8 @@ Control from your phone (same Wi-Fi or Tailscale)
 | Real-time session monitoring | Monitor from your smartphone | Glanceable status in macOS menu bar |
 | Quick tab focus with keyboard | Remote terminal focus | Click to focus terminal |
 | Vim-style navigation | Send messages to terminal | No screen space required |
-| Simple status display | Permission prompt navigation | Auto-updates on session changes |
-| | Screen capture with pinch zoom | |
+| Simple status display | Permission prompt navigation | Auto-starts on hook events |
+| | Screen capture with pinch zoom | Open Dashboard from menu |
 
 - 🔌 **Serverless** - File-based state management, no API server required
 - ⚡ **Easy Setup** - One command `ccm` for automatic setup and launch
@@ -182,7 +191,13 @@ Monitor and control Claude Code sessions from your smartphone.
 
 A native macOS menu bar item that shows session status at a glance without taking up any screen space.
 
-### Launch
+### Auto-Start
+
+The menu bar app **automatically starts** whenever Claude Code fires a hook event (e.g., when a session begins). No manual launch required — just use Claude Code as usual and the menu bar icon will appear.
+
+### Manual Launch
+
+You can also start it manually:
 
 ```bash
 ccm menubar
@@ -212,7 +227,10 @@ Zero-count statuses are omitted to keep the display compact.
 
 ### Dropdown Menu
 
-Click the menu bar item to see individual sessions. Click a session to focus its terminal window.
+Click the menu bar item to see individual sessions:
+
+- **Open Dashboard...** — Opens the terminal UI (`ccm watch`) in a new terminal window (iTerm2 or Terminal.app)
+- **Session items** — Click a session to focus its terminal window
 
 ### Stop
 

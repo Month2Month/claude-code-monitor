@@ -1,3 +1,4 @@
+import { ensureMenubar } from '../menubar/ensure.js';
 import { flushPendingWrites, updateSession } from '../store/file-store.js';
 import type { HookEvent, HookEventName } from '../types/index.js';
 import { readJsonFromStdin } from '../utils/stdin.js';
@@ -75,4 +76,11 @@ export async function handleHookEvent(eventName: string, tty?: string): Promise<
 
   // Ensure data is written before process exits (hooks are short-lived processes)
   flushPendingWrites();
+
+  // Auto-launch menubar app if not already running (fire-and-forget)
+  try {
+    ensureMenubar();
+  } catch {
+    // Silently ignore menubar launch failures in hooks
+  }
 }
