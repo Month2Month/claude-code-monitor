@@ -1,5 +1,5 @@
-import { flushPendingWrites, updateSession } from '../store/file-store.js';
 import { ensureMenubar } from '../menubar/ensure.js';
+import { flushPendingWrites, updateSession } from '../store/file-store.js';
 import type { HookEvent, HookEventName } from '../types/index.js';
 import { readJsonFromStdin } from '../utils/stdin.js';
 import { buildTranscriptPath } from '../utils/transcript.js';

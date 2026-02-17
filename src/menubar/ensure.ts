@@ -1,5 +1,5 @@
-import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { spawn } from 'node:child_process';
+import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { buildMenubarApp, getPidFilePath } from './build.js';
 
 /**
